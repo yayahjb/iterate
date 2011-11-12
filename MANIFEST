@@ -1,0 +1,19 @@
+   File Name		Archive #	Description
+-----------------------------------------------------------
+ ITERATE.cmn                1	include file for iterate.f
+ MANIFEST                   1	This file
+ Makefile                   1	Command file for make
+ Makefile_save              1	Clean safety copy of Makefile
+ README                     1	Instructions on installtion and use
+ ciftbx.cmf                 1	functions include file used by ciftbx
+ ciftbx.cmn                 1	include file used by ciftbx (=.cmf+.cmv)
+ ciftbx.cmv                 1	variables file used by ciftbx
+ ciftbx.f                   1	CIF toolbox used by iterate.f
+ ciftbx.sys                 1	include file used by ciftbx
+ clearfp.f                  1	dummy routine called by ciftbx
+ clearfp_sun.f              1	alternative to clearfp.f for SUN
+ cryst1-2-cif.awk           1	awk script to extract cells from PDB
+ hash_funcs.f               1	subroutines used by ciftbx
+ iterate.csh.m4             1	m4 source of iterate.csh
+ iterate.f                  1	source of program iterate
+ iterate.html.m4            1	m4 source of iterate.html

@@ -1,0 +1,10 @@
+      common /files/ iunt0,iunt1,iunt2,iunt3,iunt10
+      common /qenv/ querst,ostyle,istyle
+      common /qcifl/ cifres
+      common /qcifs/ cifeid,cifsgs,hm
+      character*80 querst,ostyle,istyle
+      character*4 cifeid
+      character*11 cifsgs
+      character*1 hm
+      logical cifres
+      include 'ciftbx.cmv'

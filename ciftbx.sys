@@ -1,0 +1,256 @@
+C
+C
+C >>>>>> Common declararations 'ciftbx.sys'
+C               
+C        For inclusion in 'ciftbx.f'
+C
+C        Include all user common definitions, but not functions
+         include 'ciftbx.cmv'
+C
+C        Define parameters controlling the sizes of things
+C
+         integer NUMDICT,NUMHASH,NUMBLOCK,NUMLOOP,NUMITEM,NUMIP1,MAXTAB,
+     *     MAXBOOK
+C
+C                                 Number of entries in dictionary tables
+         PARAMETER (NUMDICT=2500)
+C                                 Number of hash table entries (a modest prime)
+         PARAMETER (NUMHASH=53)
+C                                 Number of entries in data block tables
+         PARAMETER (NUMBLOCK=500)
+C                                 Number of loops in a data block
+         PARAMETER (NUMLOOP=50)
+C                                 Number of items in a loop
+         PARAMETER (NUMITEM=50)
+C                                 Maximum number of tabs in output cif line
+         PARAMETER (MAXTAB=10)
+C                                 Maximum number of simultaneous bookmarks
+         PARAMETER (MAXBOOK=1000)
+C
+C                                 Derived value for loop arrays
+         PARAMETER (NUMIP1=NUMITEM+1)
+C
+C                                 Flag if test_ last called (yes/no )
+         character testfl*3
+C                                 Name of current data item
+         character nametb*(NUMCHAR)
+C                                 Tab character for this machine
+         character tab*1
+C                                 Character buffer for reading lines
+         character buffer*(MAXBUF)
+C                                 Character buffer for tab-expanded lines
+         character bufntb*(MAXBUF)
+C                                 Dictionary validation check
+         character vcheck*3
+C                                 Dictionary data type check
+         character tcheck*3
+C                                 Dictionary flag             
+         character dictfl*3
+C                                 Dictionary names
+         character dicnam(NUMDICT)*(NUMCHAR)
+C                                 Dictionary names with upper/lower case
+         character dictag(NUMDICT)*(NUMCHAR)
+C                                 Dictionary data types
+         character dictyp(NUMDICT)*4
+C                                 Data names in data block
+         character dname(NUMBLOCK)*(NUMCHAR)
+C                                 Data names in data block with u/l case
+         character dtag(NUMBLOCK)*(NUMCHAR)
+C                                 Data type of data item 
+         character dtype(NUMBLOCK)*4
+C                                 Flag signalling output CIF open
+         character pfilef*3
+C                                 Flag signalling loop_ being loaded
+         character ploopf*3
+C                                 Flag signalling text being loaded
+         character ptextf*3
+C                                 Output string buffer
+         character obuf*(MAXBUF)
+C                                 Output prefix string
+         character prefx*(MAXBUF)
+C                                 Dictionary category names
+         character dcname(NUMDICT)*(NUMCHAR)
+C                                 Category names in use
+         character cname(NUMBLOCK)*(NUMCHAR)
+C                                 Dictionary extended types
+         character dicxtyp(NUMDICT)*(NUMCHAR)
+C                                 Datablock extended types
+         character dxtyp(NUMBLOCK)*(NUMCHAR)
+C                                 Format for single precision esd's
+         character*13 esdfmt
+C                                 Format for double precision esd's
+         character*13 edpfmt
+C                                 Format for writing double precision numbers
+         character*8 ndpfmt       
+C                                 Record number containing data item
+         integer   drecd(NUMBLOCK)
+C                                 Character position of item in record
+         integer   dchar(NUMBLOCK)
+C                                 Record number containing tag of item
+         integer   trecd(NUMBLOCK)
+C                                 Character position of tag of item in record
+         integer   tchar(NUMBLOCK)
+C                                 Character position of tag of item in record
+C                                 tab-expanded
+         integer   xchar(NUMBLOCK)
+C                                 Loop block number (0 for non-loop)
+         integer   nloop(NUMBLOCK)
+C                                 Item count in loop packet
+         integer   iloop(NUMBLOCK)
+C                                 Loop line counter; initially zero
+         integer   lloop(NUMBLOCK)
+C                                 Number of items per packet in each loop
+         integer   loopni(NUMLOOP)
+C                                 Number of packets per loop    
+         integer   loopnp(NUMLOOP)
+C                                 Record number of loop header    
+         integer   loorec(NUMLOOP)
+C                                 Character position of loop header    
+         integer   loopos(NUMLOOP)
+C                                 Character position of loop header
+C                                 tab-expanded    
+         integer   loopox(NUMLOOP)
+C                                 Number of last non-blank chars in input 
+         integer   lastch
+C                                 Number of items in current loop packet
+         integer   ploopc
+C                                 Number of items in output loop packet
+         integer   ploopn
+C                                 Number of current loop block
+         integer   loopnl
+C                                 Count of packets in current loop
+         integer   loopct
+C                                 Number of data names in hash table 
+         integer   nhash 
+C                                 Number of data names in data block
+         integer   nname
+C                                 Current number of data name in block
+         integer   iname
+C                                 Number of dictionary names
+         integer   ndict 
+C                                 Number of records in CIF
+         integer   nrecd
+C                                 Record number of requested line
+         integer   irecd
+C                                 Record number of current line
+         integer   jrecd
+C                                 Record number of tab-expanded line
+         integer   jrect
+C                                 Last record number of current block
+         integer   lrecd
+C                                 Character pointer of current input line
+         integer   jchar
+C                                 Character pointer of output CIF line
+C                                 next location to store
+         integer   pchar
+C                                 Character pointer of output CIF line
+C                                 last location stored
+         integer   pcharl
+C                                 Number of data block names stored
+         integer   nbloc
+C                                 Device number of input CIF 
+         integer   cifdev
+C                                 Device number of direct access file
+         integer   dirdev
+C                                 Device number of error message file
+         integer   errdev
+C                                 Device number of output CIF
+         integer   outdev
+C                                 Cached copy of esdlim_
+         integer   esdcac
+C                                 Cached esd digits
+         integer   esddig
+C                                 Number of Dictionary Category names stored
+         integer   ndcname
+C                                 Bookmark data
+         integer   ibkmrk(4,MAXBOOK)
+C                                 Indices of Dictionary Category 
+C                                 names for items
+         integer   dcindex(NUMDICT)
+C                                 Hash Table for Dic. Category names
+         integer   dchash(NUMHASH)
+C                                 Chain pointers for hash searches
+C                                 of Dictionary Category names
+         integer   dcchain(NUMDICT)
+C                                 Hash table for Dictionary name
+         integer   dichash(NUMHASH)
+C                                 Chain pointers for hash search of
+C                                 Dictionary names
+         integer   dicchain(NUMDICT)
+C                                 Block hash table
+         integer   dhash(NUMHASH)
+C                                 Category hash table
+         integer   chash(NUMHASH)
+C                                 Chain pointers for hash search of
+C                                 block names
+         integer   dchain(NUMBLOCK)
+C                                 Chain pointers for hash search of
+C                                 categories
+         integer   cchain(NUMBLOCK)
+C                                 Number of Category names stored
+         integer   ncname
+C                                 Character starting position of loop items
+         integer   loopch(NUMIP1)
+C                                 String length of loop items
+         integer   loopln(NUMIP1)
+C                                 Record number of loop items
+         integer   looprd(NUMIP1)
+C                                 Indices of Category 
+C                                 names for items
+         integer   cindex(NUMBLOCK)
+C                                 Dictionary pointer from data block
+         integer   ddict(NUMBLOCK)
+C                                 Alias links, 0 for no alias or index
+C                                 of item name in dicnam which
+C                                 is the root of its definitions
+         integer   aroot(NUMDICT)
+C                                 Alias links, 0 for no next alias or
+C                                 index of next alias in dicnam
+         integer   alias(NUMDICT)
+C                                 dcheck result from dicnam
+         integer   xdchk
+C                                 minimum exponent for DP calculations
+         integer   minexp
+C                                 length of output prefix string
+         integer   lprefx
+C                                 Potential tabs in output line
+         integer   itabp(MAXTAB)
+C                                 Count of potential tabs
+         integer   numtab
+C                                 Returned number
+         double precision numbtb
+C                                 Returned standard deviation
+         double precision sdevtb
+C                                 Decimal double precision precision
+         double precision dpprc
+C                                 Decimal double precision minimum power of 10
+         double precision dpmin
+C                                 Decimal single precision precision
+         real      decprc
+C                                 Decimal single precision minimum power of 10
+         real      decmin
+C                                 Internal save of saveo_
+         logical   psaveo
+C
+         common/tbxc/ buffer,dname,dtype,tab,dicnam,dictag,dictyp,
+     *                dictfl,dtag,nametb,testfl,vcheck,tcheck,pfilef,
+     *                ploopf,ptextf,dcname,cname,dicxtyp,dxtyp,esdfmt,
+     *                edpfmt,ndpfmt,prefx,obuf,bufntb
+C
+         common/tbxi/ nrecd,drecd,trecd,irecd,lrecd,dchar,tchar,xchar,
+     *                ndict,outdev,nloop,iloop,lloop,loopct,loopni,
+     *                loopnp,loopnl,nname,nhash,cifdev,dirdev,errdev,
+     *                jchar,pchar,iname,ploopn,ploopc,nbloc,jrecd,
+     *                lastch,esdcac,esddig,ndcname,dcindex,ncname,
+     *                cindex,aroot,alias,dchash,dcchain,dichash,
+     *                dicchain,dhash,dchain,ddict,xdchk,loopch,loopln,
+     *                looprd,minexp,lprefx,itabp,numtab,pcharl,loopos,
+     *                loopox,loorec,jrect,ibkmrk,chash,cchain
+
+C
+         common/tbxdp/numbtb,sdevtb,dpprc,dpmin
+C
+         common/tbxr/ decprc,decmin
+C
+         common/tbxl/ psaveo
+C

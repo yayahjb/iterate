@@ -1,0 +1,413 @@
+README for ITERATE 29 Sep 96
+
+Herbert J. Bernstein, Bernstein + Sons
+Lawrence C. Andrews, Thuridion, Inc.
+
+NOTICE
+
+Some of the software and documents included within this software
+package are the intellectual property of various parties, and
+placement in this package does not in anyway imply that any such
+rights have in any way been waived or diminished.
+
+With respect to any software or documents for which a copyright
+exists, ALL RIGHTS ARE RESERVED TO THE OWNERS OF SUCH COPYRIGHT.
+
+Even though the authors of the various documents and software found
+here have made a good faith effort to ensure that the documents are
+correct and that the software performs according to its documentation,
+and we would greatly appreciate hearing of any problems you may
+encounter, the programs and documents any files created by the
+programs are provided **AS IS** without any warrantee as to
+correctness, merchantability or fitness for any particular or general
+use.
+
+THE RESPONSIBILITY FOR ANY ADVERSE CONSEQUENCES FROM THE USE OF
+PROGRAMS OR DOCUMENTS OR ANY FILE OR FILES CREATED BY USE OF THE
+PROGRAMS OR DOCUMENTS LIES SOLELY WITH THE USERS OF THE PROGRAMS OR
+DOCUMENTS OR FILE OR FILES AND NOT WITH AUTHORS OF THE PROGRAMS OR
+DOCUMENTS. 
+
+
+
+INSTALLATION
+
+Before installation, ensure that you have a complete kit as
+shown in the file MANIFEST.  If you think Makefile has been
+corrupted, make a fresh copy from Makefile_save.  The files
+ciftbx.f, ciftbx.cmn, ciftbx.cmf, ciftbx.cmv, ciftbx.sys and 
+hash_funcs.f are from the CIFtbx2 kit.  They are needed in 
+order to read and write CIFs.  If you need an update to 
+CIFtbx2, see
+  http://ndbserver.rutgers.edu/software/ciftbx
+
+The complete ITERATE suite consists of a the fortran
+program ITERATE, an html web page iterate.html, and
+a cgi-bin script iterate.csh.  The web page and script
+need some definitions for each system.  They are built
+from m4 macro documents by make, using a command file
+Makefile, which must contain the appropriate definitions.
+
+In order to install the program, you need to edit the file
+Makefile, setting the following parameters appropriately for
+your system:
+
+HTTPDSERVER is the name of the server on which the installation 
+is being made.  YOU MUST CHANGE THIS DEFINITION TO PERMIT 
+REMOTE ACCESS.  The default definition is:
+
+HTTPDSERVER	=	localhost
+
+BINDEST is the installation directory for the executable of ITERATE.
+CGIBIN is the installation directory for the cgi-bin script iterate.csh
+CGIBINEXT is the external name of the directory for the cgi-bin 
+script iterate.csh. HTDOCS is the installation directory for the 
+HTML document iterate.html.  The following are normal defaults 
+for a system manager installation assuming an NCSA httpd default 
+installation.
+
+BINDEST		=	/usr/local/bin
+CGIBIN		=	/usr/local/etc/httpd/cgi-bin
+CGIBINEXT	=	/cgi-bin
+HTDOCS		=	/usr/local/etc/httpd/htdocs
+
+For a user installation you need the system manager to have permitted 
+cgi-bin execution from the directory given.  The following lines, with 
+the "??????" replaced by a valid user name are a possible start on 
+user installation definitions
+
+USERNAME	=	??????
+BINDEST		=	/home/$(USERNAME)/bin
+CGIBIN		=	/home/$(USERNAME)/public_html/cgi-bin
+CGIBINEXT	=	/~$(USERNAME)/cgi-bin
+HTDOCS		=	/home/$(USERNAME)/public_html
+
+The default compile flag definition to select debug mode under unix is
+
+FFLAGS	=	-g
+
+For IBM AIX xlf compilation with full optimization try this
+
+FFLAGS	=	-O3 -qstrict
+FC	=	xlf
+
+The following flag normally does not need to be changed.
+
+HTFLAGS 	=	-DFULLHTDOCS=$(CGIPATH)
+
+However, for use with wwwcount2.3
+
+HTFLAGS	=	-DFULLHTDOCS=$(CGIPATH) -DWWWCOUNT=TRUE
+
+Once you have completed your edit, then
+
+      make edit_done
+      make all
+
+If you are the system manager and have set the definitions
+appropriately, then you can use
+
+      make install
+
+to install the program, web page and cgi-bin script.
+
+OPERATION
+
+The program may be operated as a stand-alone program, reading
+data from stdin, writing output to stdout and messages to stderr.
+Three environment variables control the operation of the program
+in stand-alone mode:
+
+ITERATE_QUERY           set to NO if the program is to run a single pass
+OUTPUT_STYLE            set to CIF if the output is to be a CIF
+INPUT_STYLE             set to CIF if the input is to be a CIF
+
+If the input is a CIF, the following tokens are expected:
+
+    _cell.entry_id           a character string to associate with the cell
+    _cell.space_group_name_H-M
+                             a space group symbol (used only for centering)
+    _cell.length_a           the length in Angstroms of cell edge a with esd
+    _cell.length_b           the length in Angstroms of cell edge b with esd
+    _cell.length_c           the length in Angstroms of cell edge c with esd
+    _cell.angle_alpha        the cell angle alpha in degrees with esd
+    _cell.angle_beta         the cell angle beta in degrees with esd
+    _cell.angle_gamma        the cell angle gamma in degrees with esd
+
+When esd's are given they should be given as parenthesized digits, as
+in
+    _cell.length_a    100.5(3)
+for a cell edge of 100.5 +/- .3
+
+When no esd's are given the program forces in minimal defaults.
+
+If the input is not a CIF, then the information to be provided is
+a lattice centering symbol (P, F, etc.), then a line with three
+cell edge lengths and angles, and finally a line with with three
+edge length esd's in Angstroms (not final digits) and cell angle esd's
+in degrees.
+
+If the output is a cif, the following tokens are used:
+
+        data_G6_SEARCH
+        loop_
+        _cell.entry_id
+        _cell.id
+        _cell.space_group_name_H-M
+        _cell.Bravais_lattice_symbol
+        _cell.length_a
+        _cell.length_b
+        _cell.length_c
+        _cell.angle_alpha
+        _cell.angle_beta
+        _cell.angle_gamma
+        _cell.unreduced_length_a
+        _cell.unreduced_length_b
+        _cell.unreduced_length_c
+        _cell.unreduced_angle_alpha
+        _cell.unreduced_angle_beta
+        _cell.unreduced_angle_gamma
+
+The last six are used to report the centered, rather than primitive
+cell.
+
+
+SAMPLE WEB PAGE
+   
+G6 Bravais Lattice Determination Interface 
+
+   
+   
+   by
+   
+   Lawrence C. Andrews, Thuridion, Inc., andrews@thuridion.com and
+   Herbert J. Bernstein, Bernstein+Sons, yaya@aip.org
+   ______ _____
+   Output Style: [text]
+   
+  Select the crystal lattice centering:[P (primitive)...........]
+  
+  Specify the cell edge lengths and angles:
+  
+   
+   _cell.length_a _________ _cell.angle_alpha _________
+   _cell.length_b _________ _cell.angle_beta _________
+   _cell.length_c _________ _cell.angle_gamma _________
+   
+  Specify the cell edge length esd's and angle esd's:
+  
+   
+   _cell.length_a_esd _________ _cell.angle_alpha_esd _________
+   _cell.length_b_esd _________ _cell.angle_beta_esd _________
+   _cell.length_c_esd _________ _cell.angle_gamma_esd _________
+   
+     _________________________________________________________________
+     _________________________________________________________________
+   
+What Does This Web Page Do? 
+
+   
+   
+   In simple terms, what this page does is to find the cells which are
+   "close" to the cell given, in order to help find the Bravais lattice
+   of highest symmetry consistent with the cell.
+   
+   A central problem in the solution of every crystal structure is to
+   determine the correct Bravais lattice of the crystal. The Bravais
+   lattices as they are usually listed are:
+   
+   aP triclinic (anorthic) primitive
+   mP monoclinic primitive
+   mS monoclinic side-centered (usually C-centered)
+   oP orthorhombic primitive
+   oS orthorhombic side-centered
+   oF orthorhombic face-centered
+   oI orthorhombic body-centered
+   hP hexagonal primitive
+   hR hexagonal rhombohedrally-centered
+   tP tetragonal primitive
+   tI tetragonal body-centered
+   cP cubic primitive
+   cF cubic face-centered
+   cI cubic body-centered
+   
+   
+   Failure to find the highest correct symmetry has several consequences,
+   the worst of which is that the structure may not be solved. The least
+   of the consequences is that Richard Marsh may publish a paper that
+   points out the error, corrects it, and finds a better solution to the
+   structure. Many methods have been described for finding the correct
+   Bravais lattice. A summary of the published methods was published in
+   the paper that described the G6 formalism (which is used in the
+   program on this web page).
+   
+   "Lattices and Reduced Cells as Points in 6-Space and Selection of
+   Bravais Lattice Type by Projections." Lawrence C. Andrews and Herbert
+   J. Bernstein, Acta Crystallographica, A44, 1009-1018 (1988).
+   
+   The program on this Web page implements a search in G6 for the various
+   Bravais lattices that the user's cell may fit. For each lattice type,
+   the best metric match is reported. If the higher symmetry type is
+   actually correct, then that is likely to be the best cell from which
+   to start further refinement. However, the possibility exists that one
+   of the rejected cells (which did not match as well) was actually the
+   correct one to use. The reason for this ambiguity is experimental
+   error and its propagation in the transformations of the lattices in
+   the program. Fortunately, the rejected cells are usually quite similar
+   to the accepted one.
+   
+   A note on standard deviations: First, even in the best of
+   circumstances, standard deviations of unit cell dimensions from
+   4-circle diffractometer data are always underestimated (by at least a
+   factor of 2). In addition, the points chosen for the determination are
+   often not well distributed (for example all in the first octant of
+   orthorhombic lattices). These less than optimal choices cause
+   substantial systematic error. The experimental errors are amplified in
+   the mathematical conversions between various lattices that any lattice
+   search program must perform. It is not a rare occurrence for angles to
+   be incorrect by 0.5 degrees in initial unit cell determinations.
+   
+   Note: Even in most well determined unit cells, the actual errors in
+   the edge lengths is 0.2 to 0.5 parts per thousand. (Note that
+   reproducibility of the measurements is substantially better, leading
+   to the illusion that diffractometers produce excellent unit cell
+   parameters). Use of standard deviations that are too small is a common
+   reason for failure of Bravais lattice searches. For small molecules,
+   0.1 Angstroms is a reasonable error for the edge lengths, for
+   proteins, 0.4 to 0.5 (or even more for preliminary measurements).
+   Accurate unit cell parameters must by determined by a number of more
+   complex methods and must include extrapolation to remove systematic
+   effects. For an excellent summary, see "Xray Structure Determination",
+   G.H.Stout and L.H.Jensen, Wiley, 1989.
+
+
+
+SAMPLE TEXT OUTPUT
+
+
+  # G6 Lattice Identification
+  
+   
+   
+   # Centering: P
+   
+   # Cell: 10. 10. 10. 90. 90. 90.
+   
+   # Sigmas: .15 .15 .15 .2 .2 .2
+   
+  # Results of ITERATE Run
+
+  # Input Lattice Symbol  P
+
+  # INPUT CELL AND ERRORS       INPUT VECTOR AND ERRORS
+
+  #      10.000       .150           100.000       3.00
+  #      10.000       .150           100.000       3.00
+  #      10.000       .150           100.000       3.00
+  #      90.000       .200              .000        .70
+  #      90.000       .200              .000        .70
+  #      90.000       .200              .000        .70
+
+
+  # INPUT VECTOR SIZE AND ERROR AND RATIO     173.21      5.33       .03
+
+  # REDUCED CELL
+  # Red. Cell       10.000    10.000    10.000    90.000    90.000    90.000
+  # Red. Vector    100.00   100.00   100.00      .00      .00      .00
+
+
+   1   cP #     .00 = Distance Projected    Internat. Tables#( 3)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  primitive         10.000
+
+  #    transformation from 3-space original cell
+  #    to final primitive cell
+  #           1.000   .000   .000
+  #            .000  1.000   .000
+  #            .000   .000  1.000
+
+
+
+   4   tP #     .00 = Distance Projected    Internat. Tables#(11)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  primitive         10.000    10.000
+
+  #    transformation from 3-space original cell
+  #    to final primitive cell
+  #           1.000   .000   .000
+  #            .000  1.000   .000
+  #            .000   .000  1.000
+
+
+
+  10   hR #     .00 = Distance Projected    Internat. Tables#( 2)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  as rhomboh.       10.000   alpha      90.000
+
+  #    transformation from 3-space original cell
+  #    to final primitive cell
+  #           1.000 -1.000   .000
+  #          -1.000   .000  1.000
+  #          -1.000 -1.000 -1.000
+
+
+
+  12   oP #     .00 = Distance Projected    Internat. Tables#(32)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  primitive         10.000    10.000    10.000
+
+  #    transformation from 3-space original cell
+  #    to final primitive cell
+  #           1.000   .000   .000
+  #            .000  1.000   .000
+  #            .000   .000  1.000
+
+
+
+  14   oS #     .00 = Distance Projected    Internat. Tables#(13)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  side-centered     14.142    14.142    10.000
+
+  #    transformation from 3-space original cell
+  #    to final centered cell
+  #           1.000  1.000   .000
+  #          -1.000  1.000   .000
+  #            .000   .000  1.000
+
+
+
+  20   mP #     .00 = Distance Projected    Internat. Tables#(33)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  primitive         10.000    10.000    10.000   beta       90.000
+
+  #    transformation from 3-space original cell
+  #    to final primitive cell
+  #           1.000   .000   .000
+  #            .000  1.000   .000
+  #            .000   .000  1.000
+
+
+
+  22   mS #     .00 = Distance Projected    Internat. Tables#(10)
+  #    Vector          100.0   100.0   100.0      .0      .0      .0
+  #    cell
+               10.00   10.00   10.00    90.00   90.00   90.00
+  #  side-centered     14.142    14.142    10.000   beta       90.000
+
+  #    transformation from 3-space original cell
+  #    to final centered cell
+  #           1.000  1.000   .000
+  #          -1.000  1.000   .000
+  #            .000   .000  1.000

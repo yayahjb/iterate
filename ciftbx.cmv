@@ -1,0 +1,99 @@
+C
+C >>>>>> Common declararations 'ciftbx.cmn'
+C
+C        These declarations must be included in ciftbx user
+C        applications.
+C
+C
+C        Parameters to control sizes
+C
+C                                 Maximum number of characters in
+C                                 data names
+         integer NUMCHAR
+         PARAMETER (NUMCHAR=48)
+C                                 Maximum number of characters in
+C                                 a line
+         integer MAXBUF
+         PARAMETER (MAXBUF=200)
+C           
+C
+C                                 Align loop active flag (true/false)
+         logical   align_
+C                                 Set loop tabs flag (true/false)
+         logical   tabl_
+C                                 Input tab expansion flag (true/false)
+         logical   tabx_
+C                                 Output tab expansion flag (true/false)
+         logical   ptabx_
+C                                 Text active flag (true/false)
+         logical   text_
+C                                 Loop active flag (true/false)
+         logical   loop_
+C                                 Save frame active flag (true/false)
+         logical   save_
+C                                 Save frame output flag (true/false)
+         logical   saveo_
+C                                 Alias use flag (true/false)
+         logical   alias_
+C                                 Alias output mapping flag (true/false)
+         logical   aliaso_
+C                                 Length of current data item in strg_
+         integer   long_
+C                                 Loop block number of current item    
+         integer   list_
+C                                 Length of current filename in file_
+         integer   longf_
+C                                 Integer limit on esd's (9, 19, 29, etc.)
+         integer   esdlim_
+C                                 User setable input line value
+         integer   line_
+C                                 Record number of last input line
+         integer   recn_
+C                                 Record number of last last line
+         integer   precn_
+C                                 Character position of data name
+         integer   posnam_
+C                                 Character position of data value
+         integer   posval_
+C                                 Character position of decimal point
+         integer   posdec_
+C                                 Character position of end of field
+         integer   posend_
+C                                 Character position of output data name
+         integer   pposnam_
+C                                 Character position of output data value
+         integer   pposval_
+C                                 Character position of output decimal point
+         integer   pposdec_
+C                                 Character position of end of output field
+         integer   pposend_
+C                                 Name of current data block
+         character bloc_*(NUMCHAR)
+C                                 Character image of current data item
+         character strg_*(MAXBUF)
+C                                 File name of current CIF
+         character file_*(MAXBUF)
+C                                 Data item type
+         character type_*4
+C                                 Data type (May be more precise than type_)
+         character*(NUMCHAR) dictype_
+C                                 Data category
+         character*(NUMCHAR) diccat_
+C                                 Data alias root name
+         character*(NUMCHAR) dicname_
+C                                 Input CIF tag name
+         character*(NUMCHAR) tagname_
+C                                 Quoted input string flag
+         character quote_*1
+C                                 Quoted output string flag
+         character pquote_*1
+C
+         common/tbuc/ strg_,bloc_,file_,type_,dictype_,diccat_,
+     *     dicname_,tagname_,quote_,pquote_
+C
+         common/tbui/ list_,long_,longf_,line_,esdlim_,recn_,precn_,
+     *     posnam_,posval_,posdec_,posend_,
+     *     pposnam_,pposval_,pposdec_,pposend_
+C
+         common/tbul/ loop_,text_,align_,save_,saveo_,aliaso_,alias_,
+     *     tabl_,tabx_,ptabx_
