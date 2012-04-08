@@ -21,7 +21,19 @@ C         write (*,*) (m(j,i),j=1,3)
 C 3000 continue
 C      end
 
-
+C**********************************************************************C
+      real*8 function m3det(m)
+      implicit none
+      real*8 m(3,3)
+C----------------------------------------------------------------------C
+      m3det = m(1,1)*m(2,2)*m(3,3)
+     *       +m(1,2)*m(2,3)*m(3,1)
+     *       +m(1,3)*m(2,1)*m(3,2)
+     *       -m(1,1)*m(2,3)*m(3,2)
+     *       -m(1,2)*m(2,1)*m(3,3)
+     *       -m(1,3)*m(2,2)*m(3,1)
+      return
+      end
 
 C**********************************************************************C
       subroutine btos (n,bits,s)
@@ -54,6 +66,7 @@ C**********************************************************************C
       integer signs(9)
       integer i,j,l
       real*8 t1, t1min
+      real*8 m3det
 C----------------------------------------------------------------------C
 
       DO 900 I=1,6
@@ -97,6 +110,13 @@ C      write (*,*) ' t1 ',t1,t1min,bitmin
          m(i,j) = signs(l)*m3(i,j)
  6000    continue
       endif
+      if (m3det(m).lt.0) then
+         do 7000 l=1,9
+         i = (l-1)/3 + 1
+         j = l -3*(i-1)
+         m(i,j) = -m(i,j)
+ 7000    continue
+      endif
       end
 
 
@@ -111,6 +131,7 @@ C**********************************************************************C
       integer signs(9)
       integer i,j,l
       real*8 t1, t1min
+      real*8 m3det
 C----------------------------------------------------------------------C
 
       do 1000 i=1,3
@@ -128,11 +149,6 @@ C         write (*,*) ' bits,signs ',bits,signs
  2000    continue
          call m3tom6 (m,m6t)
          t1 = mdif(6,m6,m6t)
-C         write (*,*)  ' m6t in g6toe3 '
-C         do 3000 i=1,6
-C 3000    write (*,'(1x,6f8.2)') (m6t(j,i),j=1,6)
-
-C         write (*,*) ' bits,t1 ',bits,t1
          if (bits.eq.511) t1min = t1
          if (t1 .le. t1min) then
             t1min = t1
@@ -149,6 +165,13 @@ C         write (*,*) ' bits,t1 ',bits,t1
          j = l -3*(i-1)
          m(i,j) = signs(l)*m3(i,j)
  6000    continue
+      endif
+      if (m3det(m).lt.0) then
+         do 7000 l=1,9
+         i = (l-1)/3 + 1
+         j = l -3*(i-1)
+         m(i,j) = -m(i,j)
+ 7000    continue
       endif
       end
 

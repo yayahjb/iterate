@@ -144,9 +144,9 @@ C Determination", G.H.Stout and L.H.Jensen, Wiley, 1989.
 C
 C Note on the name BGAOL -- gaols have lots of cells
 C
-      include "mkrefl.for"
+      include "MKREFL.FOR"
       include "near6.for"
-      include "e3tog6.for"
+      include "E3TOG6.FOR"
 
 C**********************************************************************C
       PROGRAM RED
@@ -279,7 +279,7 @@ C----------------------------------------------------------------------C
  2000       CONTINUE
             DO 3000  IV=1,NV
             CALL REDUCE (V(1,IV),MRTEST,VTEST,
-     2           ERRSIZ/2.D0,'REDUCE')
+     2           MIN(.5D0,ERRSIZ/2.D0),'REDUCE')
             CALL vdifn(6,V(1,IV),VTEST,VTEST)
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
