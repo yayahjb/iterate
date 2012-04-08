@@ -242,7 +242,8 @@ C----------------------------------------------------------------------C
          STOP
       ENDIF
 
-      TREE(1) = 0
+      do 100 i=1,MXTREE
+  100 Tree(i) = 0
       NV = 0
       DMIN = 0.1*DSQRT(DOTVN(6,GRED,GRED))*RATIO
       grmin = gred(1)**2+gred(2)**2+gred(3)**2

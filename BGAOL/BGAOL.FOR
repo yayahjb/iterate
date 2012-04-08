@@ -224,7 +224,8 @@ C----------------------------------------------------------------------C
       CALL BLDPRJ (MAXPRJ,NPROJ,ITDESG,CHRLAT,PJNORM,PRJ,'BLDPRJ')
       write (*,*) ' nproj = ',nproj
 
-      IF (INPCEL(LATSYM,TITLE,CV,CE)) THEN
+ 10   IF (INPCEL(LATSYM,TITLE,CV,CE)) THEN
+         IF (LATSYM.EQ.'Q') GO TO 9000
          CALL CTOG6(CV,CE,G,GE,SIZE,ERRSIZ,RATIO,'CTOG6 ')
          WRITE (*,'('' INPUT CELL AND ERRORS '')')
          CALL WRCELL(CV,CE,'WRCELL')
@@ -261,7 +262,7 @@ C----------------------------------------------------------------------C
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
          
 
-      CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
+         CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
 
 
 
@@ -408,7 +409,9 @@ C----------------------------------------------------------------------C
       enddo
 
  6000 CONTINUE
+      GO TO 10
       ENDIF
+ 9000 WRITE(*,*) "Exiting BGAOL"
       END
 
 C**********************************************************************C
@@ -1189,8 +1192,10 @@ C----------------------------------------------------------------------C
       LATSYM = INPUTLINE(1:1)
       TITLE = INPUTLINE(3:101)
 
-      IF (LATSYM .GE. 'a' .AND. LATSYM .LE. 'z')
+      IF (ICHAR(LATSYM) .GE. ICHAR('a')
+     2 .AND. ICHAR(LATSYM) .LE. ICHAR('z'))
      2 LATSYM = CHAR(ICHAR(LATSYM)-ICHAR('a')+ICHAR('A'))
+      IF (LATSYM .EQ. 'X' .OR. LATSYM.EQ.'Q') GO TO 9000
       WRITE (*,*) ' Input Cell Parameters'
       READ (*,*, END=9000) CV
       INPCEL = OKCELL(LATSYM,CV)
@@ -1201,6 +1206,8 @@ C----------------------------------------------------------------------C
       RETURN
  9000 CONTINUE
       INPCEL = .FALSE.
+      LATSYM = 'Q'
+      WRITE (*,*) " End of Input "
       RETURN
       END
 
