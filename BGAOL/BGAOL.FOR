@@ -158,7 +158,8 @@ C**********************************************************************C
       PARAMETER (MAXPRJ=42)
       INTEGER ITDESG(MAXPRJ)
       INTEGER IORD(MAXPRJ)
-      LOGICAL STAND(MAXPRJ)
+      LOGICAL REDUCED(MAXPRJ),NEARREDUCED(MAXPRJ)
+      LOGICAL AMRED, AMNEARRED
       CHARACTER *2 CHRLAT(MAXPRJ)
       real*8 PJNORM(MAXPRJ)
       INTEGER PRJ(36,MAXPRJ)
@@ -201,7 +202,7 @@ C**********************************************************************C
       real*8 distances2Boundaries(21)
       character*7 bnames(21)
       integer ib
-      character*3 sprefix
+      character*4 sprefix
 
       CHARACTER *100 TITLE
 
@@ -277,7 +278,8 @@ C----------------------------------------------------------------------C
 
          DO 4000 I=1,NPROJ
             BEST(I) = -19191
-            STAND(I) = .false.
+            REDUCED(I) = .false.
+            NEARREDUCED(I) = .false.
             DBEST = 1.0E20
             DO 1000 J=1,36
                P(J) = PRJ(J,I)/PJNORM(I)
@@ -286,16 +288,25 @@ C----------------------------------------------------------------------C
                AP(J) = 1.0D0 + AP(J)
  2000       CONTINUE
             DO 3000  IV=1,NV
+            AMRED = .false.
+            CALL REDUCE (V(1,IV),MRTEST,VTEST,
+     2           0.D0,'REDUCE')
+            CALL vdifn(6,V(1,IV),VTEST,VTEST)
+            if (anorm(6,VTEST).le.ERRSIZ*1.e-6) 
+     2        AMRED=.true.
+            AMNEARRED = .false.
             CALL REDUCE (V(1,IV),MRTEST,VTEST,
      2           MIN(.5D0,ERRSIZ/2.D0),'REDUCE')
             CALL vdifn(6,V(1,IV),VTEST,VTEST)
+            if (anorm(6,VTEST).le.ERRSIZ/2.D0) 
+     2        AMNEARRED=.true.
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
             DCURR = DOTVN(6,AG,AG)
             IF ( ((DCURR .LT. DBEST-1.D-10) 
-     2        .OR. ((.NOT.STAND(I)).AND.
-     3        anorm(6,VTEST).le.ERRSIZ/2.D0)
-     4        .AND. SQRT(DCURR).LE.ERRSIZ/2.D0)
+     2        .OR. ((.NOT.REDUCED(I)).AND.AMRED)
+     3        .OR. ((.NOT.NEARREDUCED(I)).AND.AMNEARRED))
+     4        .AND. SQRT(DCURR).LE.ERRSIZ/2.D0
      5        .AND. (TG(1).GT.1.0D0 .AND. TG(2).GT.1.0D0
      2        .AND. TG(3).GT.1.0D0
      3        .AND. (
@@ -307,11 +318,8 @@ C----------------------------------------------------------------------C
                CALL CPYVN(6,TG,VBEST)
                CALL CPYVN(6,AG,AVBEST)
                CALL CPYVN(6,V(1,IV),VRED(1,I))
-               IF(anorm(6,VTEST).gt.ERRSIZ/2.D0) THEN
-                 STAND(I) = .false.
-               ELSE
-                 STAND(I) = .true.
-               ENDIF
+               REDUCED(I) = AMRED
+               NEARREDUCED(I) = AMNEARRED
             ENDIF
 
  3000       CONTINUE
@@ -319,19 +327,21 @@ C----------------------------------------------------------------------C
             IF (DSQRT(DOTVN(6,AVBEST,AVBEST)) .GT. ERRSIZ*3.5D0) 
      *        GO TO 4000
             IF (DSQRT(DBEST) .LE. 999.0) THEN
-               sprefix = "NON"
-               if (STAND(I)) sprefix = "   "
+               sprefix = " NON"
+               if (NEARREDUCED(I)) sprefix = "NEAR"
+               if (REDUCED(I)) sprefix = "    "
+        
                WRITE (*,*)
                IF (ITDESG(I).GT.0) THEN
                WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
-     2            4H +++,1X,A3,A,2X,A2,2X,A100)')
+     2            4H +++,1X,A4,A,2X,A2,2X,A100)')
      3            I,IABS(ITDESG(I)),
-     4            sprefix,"STANDARD ",CHRLAT(I), TITLE
+     4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ELSE
                WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
-     2            4H ---,1X,A3,A,2X,A2,2X,A100)')
+     2            4H ---,1X,A4,A,2X,A2,2X,A100)')
      3            I,IABS(ITDESG(I)),
-     4            sprefix,"STANDARD ",CHRLAT(I), TITLE
+     4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ENDIF
                WRITE (*,'(6X,F5.1,1X,F5.2,3H V=,6F8.1)')
      2             DSQRT(DOTVN(6,AVBEST,AVBEST)),
@@ -343,7 +353,8 @@ C----------------------------------------------------------------------C
                call cpyvn(6,TG,VOUT(1,I))
             ELSE
                BEST(I) = -19191
-               STAND(I) = .false.
+               REDUCED(I) = .false.
+               NEARREDUCED(I) = .false.
             ENDIF
             WRITE (*,*)
             call UncenterVector( VBEST, ITDESG(I), CHRLAT(I), NewCell )
@@ -367,16 +378,21 @@ C----------------------------------------------------------------------C
  4000    CONTINUE
 
       call SortDists(NPROJ, BEST, IORD, ERRSIZ)
+      write (*,*) "Final List"
+      DO iv = 1,3
+      if (iv.eq.1) write(*,*)"NIGGLI REDUCED"
+      if (iv.eq.2) write(*,*)"NEAR NIGGLI REDUCED"
+      if (iv.eq.3) write(*,*)"NON NIGGLI REDUCED"
       band = ERRSIZ/2
       bandcount = 0
-      write (*,*) "Final List"
-      DO iv = 1,2
-      if (iv.eq.1) write(*,*)"STANDARD PRESENTATIONS"
-      if (iv.eq.2) write(*,*)"NONSTANDARD PRESENTATIONS"
       DO 5000 i=1,NPROJ
          IF ( BEST(IORD(I)) .ge. 0 
-     *     .and. ((STAND(IORD(I)).and.iv.eq.1)
-     *        .or. ((.NOT.STAND(IORD(I))).and.iv.eq.2))) THEN
+     *     .and. ((REDUCED(IORD(I)).and.iv.eq.1)
+     *        .or. ((.NOT.REDUCED(IORD(I)))
+     *           .and.NEARREDUCED(IORD(I))
+     *           .and.iv.eq.2)
+     *        .or. ((.not.NEARREDUCED(IORD(I)))
+     *           .and.iv.eq.3)))THEN
            IF ( BEST(IORD(I)) .gt. band) THEN
            IF (bandcount .gt. 0) THEN
                      WRITE(*, "(1X,A)")"-----------------------------"
@@ -386,16 +402,17 @@ C----------------------------------------------------------------------C
            bandcount = 0
            if (band .gt. 3.25D0*ERRSIZ) go to 6000
            ENDIF
-           sprefix = "NON"
-           if (STAND(IORD(I))) sprefix = "   "   
+           sprefix = " NON"
+           if (NEARREDUCED(IORD(I))) sprefix = "NEAR"
+           if (REDUCED(IORD(I))) sprefix = "    "   
            if (ITDESG(IORD(I)).GT.0) then
-           WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A3,
-     2        9HSTANDARD ,A2, 2x, F9.3)" )
+           WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A4,
+     2        8HREDUCED ,A2, 2x, F9.3)" )
      3        IABS(ITDESG(IORD(I))), sprefix,
      4        CHRLAT(IORD(I)), BEST(IORD(I))
            else
-           WRITE(*, "(4H IT(, I3, 2H) ,4H ---,1x,A3,
-     2        9HSTANDARD ,A2, 2x, F9.3)" )
+           WRITE(*, "(4H IT(, I3, 2H) ,4H ---,1x,A4,
+     2        8HREDUCED ,A2, 2x, F9.3)" )
      3        IABS(ITDESG(IORD(I))), sprefix,
      4        CHRLAT(IORD(I)), BEST(IORD(I))
            endif
@@ -1515,13 +1532,13 @@ C----------------------------------------------------------------------C
       END
 
 C**********************************************************************C
-      SUBROUTINE MKNORM (VI,M,VOUT,TEST)
+      SUBROUTINE MKNORM (VI,M,VOUT,DELTA,TEST)
       implicit none
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       integer i, ncycle, numneg, nzero
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       CHARACTER *6 TEST
-      real*8 VIN(6),VI(6),VOUT(6)
+      real*8 VIN(6),VI(6),VOUT(6),DELTA
       logical PPPMMM
       INTEGER M(36),MAT(36),M1(36)
       LOGICAL AGAIN
@@ -1540,8 +1557,9 @@ C      CALL CPYVN(6,VI,VIN)
       NCYCLE = NCYCLE + 1
       AGAIN =.FALSE.
       CALL IZEROS (36,MAT)
-      IF ( (ABS(VIN(1)).GT.ABS(VIN(2))) .OR.
-     2 (VIN(1).EQ.VIN(2) .AND. ABS(VIN(4)).GT.ABS(VIN(5))) ) THEN
+      IF ( (ABS(VIN(1)).GT.ABS(VIN(2))+DELTA) .OR.
+     2 (ABS(VIN(1)-VIN(2)).LE.DELTA
+     3 .AND. ABS(VIN(4)).GT.ABS(VIN(5))+DELTA) ) THEN
          MAT(2) = 1
          MAT(7) = 1
          MAT(15) = 1
@@ -1549,8 +1567,9 @@ C      CALL CPYVN(6,VI,VIN)
          MAT(28) = 1
          MAT(36) = 1
          AGAIN = .TRUE.
-      ELSEIF ( (ABS(VIN(2)).GT.ABS(VIN(3))) .OR.
-     2 (VIN(2).EQ.VIN(3) .AND. ABS(VIN(5)).GT.ABS(VIN(6))) ) THEN
+      ELSEIF ( (ABS(VIN(2)).GT.ABS(VIN(3))+DELTA) .OR.
+     2 (ABS(VIN(2)-VIN(3)).LE.DELTA
+     3 .AND. ABS(VIN(5)).GT.ABS(VIN(6))+DELTA) ) THEN
          MAT(1) = 1
          MAT(14) = 1
          MAT(9) = 1
@@ -1622,21 +1641,26 @@ C----------------------------------------------------------------------C
       ENDIF
       CALL CPYVN(6,VI,VIN)
       NCYCLE = 0
+      CALL IUNTMN (6,M)
+
  1000 CONTINUE
       LAST = 0
-      CALL MKNORM (VIN,M,VOUT,'MKNORM')
+C     Convert to standard presentation, M is the matrix
+      CALL MKNORM (VIN,M1,VOUT,DELTA,'MKNORM')
       CALL CPYVN(6,VOUT,VIN)
+      CALL IMIM6(M1,M,M2)
+      CALL ICPYVN (36,M2,M)
       CALL IUNTMN (6,M1)
       IF (ABS(VIN(4)) .GT. ABS(VIN(2)) + DELTA) THEN
-          M1(14) = 1
-          M1(16) = INT(-dsign (1.0D0,VIN(4)))
-          M1(20) = INT(-2.0*dsign(1.0D0,VIN(4)))
-          M1(30) = M1(16)
-          AGAIN = .TRUE.
+         M1(14) = 1
+         M1(16) = INT(-dsign (1.0D0,VIN(4)))
+         M1(20) = INT(-2.0*dsign(1.0D0,VIN(4)))
+         M1(30) = M1(16)
+         AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-          LAST = 5
+         LAST = 5
       ELSEIF (ABS(VIN(5)) .GT. ABS(VIN(1)) + DELTA) THEN
          M1(13) = 1
          M1(17) = INT(-dsign (1.0D0,VIN(5)))
@@ -1664,7 +1688,7 @@ C----------------------------------------------------------------------C
          M1(20) = 2
          M1(24) = 1
          M1(25) = 2
-        M1(30) = 1
+         M1(30) = 1
          AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
@@ -1730,10 +1754,10 @@ C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
          CALL CPYVN (6,VIN,VOUT)
       ENDIF
 
-      CALL MKNORM (VOUT,M1,VIN,'MKNORM')
-         CALL IMIM6(M1,M,M2)
-         CALL ICPYVN(36,M2,M)
-         CALL CPYVN(6,VIN,VOUT)
+      CALL MKNORM (VOUT,M1,VIN,DELTA,'MKNORM')
+      CALL IMIM6(M1,M,M2)
+      CALL ICPYVN(36,M2,M)
+      CALL CPYVN(6,VIN,VOUT)
 
       IF (VIN(1).LT. 0.0D0 .OR. VIN(2).LT.0.0D0
      2        .OR. VIN(3).LT.0.0D0) THEN
