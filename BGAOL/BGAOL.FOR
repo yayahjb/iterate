@@ -224,9 +224,16 @@ C----------------------------------------------------------------------C
       CALL BLDPRJ (MAXPRJ,NPROJ,ITDESG,CHRLAT,PJNORM,PRJ,'BLDPRJ')
       write (*,*) ' nproj = ',nproj
 
- 10   IF (INPCEL(LATSYM,TITLE,CV,CE)) THEN
-         IF (LATSYM.EQ.'Q') GO TO 9000
+  100 continue
+
+      IF ( .NOT. INPCEL(LATSYM,TITLE,CV,CE)) THEN
+         GO TO 9000
+      ELSEIF ( LATSYM .eq. "Q" ) THEN
+         GO TO 9000
+      ELSE
+
          CALL CTOG6(CV,CE,G,GE,SIZE,ERRSIZ,RATIO,'CTOG6 ')
+         WRITE(*,*) " Input lattice type ", LATSYM
          WRITE (*,'('' INPUT CELL AND ERRORS '')')
          CALL WRCELL(CV,CE,'WRCELL')
          WRITE (*,*)
@@ -308,6 +315,7 @@ C----------------------------------------------------------------------C
             ENDIF
 
  3000       CONTINUE
+
             IF (DSQRT(DOTVN(6,AVBEST,AVBEST)) .GT. ERRSIZ*3.5D0) 
      *        GO TO 4000
             IF (DSQRT(DBEST) .LE. 999.0) THEN
@@ -339,19 +347,8 @@ C----------------------------------------------------------------------C
             ENDIF
             WRITE (*,*)
             call UncenterVector( VBEST, ITDESG(I), CHRLAT(I), NewCell )
+            call CalculateCenteredCell( NewCell, CenteredCell )
             write(*,"(8H newcell, 6F9.3)" ) NewCell
-            CenteredCell(1) = DSQRT( NewCell(1) );
-            CenteredCell(2) = DSQRT( NewCell(2) );
-            CenteredCell(3) = DSQRT( NewCell(3) );
-            CenteredCell(4) =
-     *          DACOS(0.5*NewCell(4)/CenteredCell(2)/CenteredCell(3)) *
-     *          180.0D0/DATAN(1.0D0)/4.0D0
-            CenteredCell(5) =
-     *          DACOS(0.5*NewCell(5)/CenteredCell(1)/CenteredCell(3)) *
-     *          180.0D0/DATAN(1.0D0)/4.0D0
-            CenteredCell(6) =
-     *          DACOS(0.5*NewCell(6)/CenteredCell(1)/CenteredCell(2)) *
-     *          180.0D0/DATAN(1.0D0)/4.0D0
             write(*,"(8H **cell*, 6F9.3)" ) CenteredCell
 
          IF (DEBUGD) THEN
@@ -366,7 +363,6 @@ C----------------------------------------------------------------------C
  3500    continue
          ENDIF
          WRITE (*,*)
-         
 
  4000    CONTINUE
 
@@ -383,7 +379,7 @@ C----------------------------------------------------------------------C
      *        .or. ((.NOT.STAND(IORD(I))).and.iv.eq.2))) THEN
            IF ( BEST(IORD(I)) .gt. band) THEN
            IF (bandcount .gt. 0) THEN
-             WRITE(*, "(1X,A)"),"-----------------------------"
+                     WRITE(*, "(1X,A)")"-----------------------------"
            ENDIF
            band = ERRSIZ/2.D0
      *       *dble(INT(2.0*BEST(IORD(I))/ERRSIZ)+1)
@@ -409,9 +405,29 @@ C----------------------------------------------------------------------C
       enddo
 
  6000 CONTINUE
-      GO TO 10
       ENDIF
- 9000 WRITE(*,*) "Exiting BGAOL"
+
+      go to 100
+
+ 9000 continue
+
+      END
+
+C**********************************************************************C
+      subroutine CalculateCenteredCell( NewCell, CenteredCell )
+      real*8 NewCell(6), CenteredCell(6)
+            CenteredCell(1) = DSQRT( NewCell(1) );
+            CenteredCell(2) = DSQRT( NewCell(2) );
+            CenteredCell(3) = DSQRT( NewCell(3) );
+            CenteredCell(4) =
+     *          DACOS(0.5*NewCell(4)/CenteredCell(2)/CenteredCell(3)) *
+     *          180.0D0/DATAN(1.0D0)/4.0D0
+            CenteredCell(5) =
+     *          DACOS(0.5*NewCell(5)/CenteredCell(1)/CenteredCell(3)) *
+     *          180.0D0/DATAN(1.0D0)/4.0D0
+            CenteredCell(6) =
+     *          DACOS(0.5*NewCell(6)/CenteredCell(1)/CenteredCell(2)) *
+     *          180.0D0/DATAN(1.0D0)/4.0D0
       END
 
 C**********************************************************************C
@@ -796,7 +812,6 @@ C**********************************************************************C
       endif
 
       end
-
 
 C**********************************************************************C
       subroutine SortDists(NDIST, DIST, IORD, ERRSIZ )
@@ -1186,11 +1201,12 @@ C**********************************************************************C
       real*8 CV(6),CE(6)
 C----------------------------------------------------------------------C
 
+      INPCEL = .true.
  1000 CONTINUE
       WRITE (*,*) ' Input Xtal Class '
-      READ (*,"(A)", END=9000 ) INPUTLINE
+      READ (*,"(A100)", END=9000, ERR=9000 ) INPUTLINE
       LATSYM = INPUTLINE(1:1)
-      TITLE = INPUTLINE(3:101)
+      TITLE = INPUTLINE(3:102)
 
       IF (ICHAR(LATSYM) .GE. ICHAR('a')
      2 .AND. ICHAR(LATSYM) .LE. ICHAR('z'))
@@ -1207,7 +1223,6 @@ C----------------------------------------------------------------------C
  9000 CONTINUE
       INPCEL = .FALSE.
       LATSYM = 'Q'
-      WRITE (*,*) " End of Input "
       RETURN
       END
 
