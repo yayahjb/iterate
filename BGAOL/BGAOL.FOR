@@ -189,12 +189,12 @@ C**********************************************************************C
       real*8 TREE(MXTREE)
       real*8 V(6,NVMAX)
       real*8 VBEST(6),AVBEST(6)
-      real*8 NewCell(6)
-      real*8 CenteredCell(6)
+      real*8 NewCell(6,MAXPRJ)
+      real*8 CenteredCell(6,MAXPRJ)
 
       real*8 DOTVN
       EXTERNAL DOTVN
-      INTEGER NPROJ,I,J
+      INTEGER NPROJ,I,J,II,JJ
       real*8 RATIO,SIZE,ERRSIZ
       real*8 anorm
 
@@ -245,8 +245,10 @@ C----------------------------------------------------------------------C
          CALL MKPRIM (LATSYM,G,MPRIM,GOUT,'MKPRIM')
          WRITE (*,*) ' AFTER MKPRIM'
          CALL dg6toe3(MPRIM,M3RED)
-         WRITE (*,*) "g6 Centering Matrix:"
-         WRITE (*,'(12x,6d10.3)') MPRIM
+         IF (DEBUGD) THEN
+           WRITE (*,*) "g6 Centering Matrix:"
+           WRITE (*,'(12x,6f10.3)') MPRIM
+         ENDIF
          WRITE (*,*) "E3 Centering Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
 
@@ -263,18 +265,15 @@ C----------------------------------------------------------------------C
          WRITE (*,'('' REDUCED CELL  '')')
          WRITE (*,'('' Red. Cell   '',6F11.4)')CRED
          WRITE (*,'('' Red. Vector '',6F10.5)') GRED
+         if (DEBUGD) THEN
          WRITE (*,*) "G6 Reduction Matrix:"
          WRITE (*,'(12x,6I6)') MRED 
+         ENDIF
          CALL g6toe3(MRED,M3RED)
          WRITE (*,*) "E3 Reduction Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
-         
-
+ 
          CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
-
-
-
-
 
          DO 4000 I=1,NPROJ
             BEST(I) = -19191
@@ -306,7 +305,7 @@ C----------------------------------------------------------------------C
             IF ( ((DCURR .LT. DBEST-1.D-10) 
      2        .OR. ((.NOT.REDUCED(I)).AND.AMRED)
      3        .OR. ((.NOT.NEARREDUCED(I)).AND.AMNEARRED))
-     4        .AND. SQRT(DCURR).LE.ERRSIZ/2.D0
+     4        .AND. SQRT(DCURR).LE.ERRSIZ*3.5D0
      5        .AND. (TG(1).GT.1.0D0 .AND. TG(2).GT.1.0D0
      2        .AND. TG(3).GT.1.0D0
      3        .AND. (
@@ -320,6 +319,13 @@ C----------------------------------------------------------------------C
                CALL CPYVN(6,V(1,IV),VRED(1,I))
                REDUCED(I) = AMRED
                NEARREDUCED(I) = AMNEARRED
+               IF (.NOT.NEARREDUCED(I).AND.DEBUGD) THEN
+                 WRITE (*,*) "NR G6: ", VRED(1,I),
+     *             VRED(2,I),VRED(3,I),VRED(4,I),
+     *             VRED(5,I),VRED(6,I)
+                 WRITE (*,*) "G6 Reduction Matrix:"
+                 WRITE (*,'(12x,6I6)') MRTEST 
+               ENDIF
             ENDIF
 
  3000       CONTINUE
@@ -351,16 +357,21 @@ C----------------------------------------------------------------------C
 
                BEST(I) = DSQRT(DOTVN(6,AVBEST,AVBEST))
                call cpyvn(6,TG,VOUT(1,I))
+               WRITE (*,*)
+               call UncenterVector( VBEST, ITDESG(I), 
+     *             CHRLAT(I), NewCell(1,I) )
+               call CalculateCenteredCell( NewCell(1,I), 
+     *             CenteredCell(1,I) )
+               write(*,"(8H G6 cell, 6F9.3)" ) 
+     *             (NewCell(JJ,I),JJ=1,6)
+               write(*,"(8H E3 cell, 6F9.3)" ) 
+     *             (CenteredCell(JJ,I),JJ=1,6)
+               WRITE (*,*)
             ELSE
                BEST(I) = -19191
                REDUCED(I) = .false.
                NEARREDUCED(I) = .false.
             ENDIF
-            WRITE (*,*)
-            call UncenterVector( VBEST, ITDESG(I), CHRLAT(I), NewCell )
-            call CalculateCenteredCell( NewCell, CenteredCell )
-            write(*,"(8H newcell, 6F9.3)" ) NewCell
-            write(*,"(8H **cell*, 6F9.3)" ) CenteredCell
 
          IF (DEBUGD) THEN
             WRITE (*,'(1X,6F10.6)') P
@@ -373,13 +384,13 @@ C----------------------------------------------------------------------C
      3            distances2Boundaries(ib)
  3500    continue
          ENDIF
-         WRITE (*,*)
 
  4000    CONTINUE
 
       call SortDists(NPROJ, BEST, IORD, ERRSIZ)
-      write (*,*) "Final List"
+      write (*,*) "Final List              Lat     Dist    Cell"
       DO iv = 1,3
+      WRITE(*, "(1X,A)")"-----------------------------"
       if (iv.eq.1) write(*,*)"NIGGLI REDUCED"
       if (iv.eq.2) write(*,*)"NEAR NIGGLI REDUCED"
       if (iv.eq.3) write(*,*)"NON NIGGLI REDUCED"
@@ -407,19 +418,23 @@ C----------------------------------------------------------------------C
            if (REDUCED(IORD(I))) sprefix = "    "   
            if (ITDESG(IORD(I)).GT.0) then
            WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A4,
-     2        8HREDUCED ,A2, 2x, F9.3)" )
+     2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
      3        IABS(ITDESG(IORD(I))), sprefix,
-     4        CHRLAT(IORD(I)), BEST(IORD(I))
+     4        CHRLAT(IORD(I)), BEST(IORD(I)),
+     5        (CenteredCell(JJ,IORD(I)),JJ=1,6)
            else
-           WRITE(*, "(4H IT(, I3, 2H) ,4H ---,1x,A4,
-     2        8HREDUCED ,A2, 2x, F9.3)" )
+           WRITE(*, "(4H IT(, I3, 2H) ,4H ---,1X,A4,
+     2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
      3        IABS(ITDESG(IORD(I))), sprefix,
-     4        CHRLAT(IORD(I)), BEST(IORD(I))
+     4        CHRLAT(IORD(I)), BEST(IORD(I)),
+     5        (CenteredCell(JJ,IORD(I)),JJ=1,6)
            endif
            bandcount = bandcount+1
          ENDIF
  5000 CONTINUE
       enddo
+      WRITE(*, "(1X,A)")"-----------------------------"
+
 
  6000 CONTINUE
       ENDIF
@@ -842,12 +857,12 @@ C**********************************************************************C
       enddo
       if (NDIST .eq. 1) return
 
-C     bring all elements .le. ERRSIZ/2 to the front
+C     bring all elements .le. ERRSIZ to the front
  100  continue
       INORD = .true.
       do ii = 1, NDIST-1
-      if (DIST(IORD(II)) .gt. ERRSIZ/2
-     *  .AND. DIST(IORD(II+1)).le.ERRSIZ/2) then
+      if (DIST(IORD(II)) .gt. ERRSIZ
+     *  .AND. DIST(IORD(II+1)).le.ERRSIZ) then
         ITEMP = IORD(II)
         IORD(II) = IORD(II+1)
         IORD(II+1) = ITEMP
@@ -856,7 +871,7 @@ C     bring all elements .le. ERRSIZ/2 to the front
       enddo
       if (.not. INORD) go to 100
 
-C     sort all elements .gt. ERRSIZ/2
+C     sort all elements .gt. ERRSIZ
       IGAP = NDIST+1
  1000 IGAP = IGAP/2
       if (IGAP .le. 0) return
@@ -864,7 +879,7 @@ C     sort all elements .gt. ERRSIZ/2
       INORD = .true.
       do II = 1, NDIST-IGAP, IGAP
       if (DIST(IORD(II)) .gt. DIST(IORD(II+IGAP))
-     *  .AND. DIST(IORD(II)) .gt. ERRSIZ/2) then
+     *  .AND. DIST(IORD(II)) .gt. ERRSIZ) then
         ITEMP = IORD(II)
         IORD(II) = IORD(II+IGAP)
         IORD(II+IGAP) = ITEMP
@@ -1558,7 +1573,7 @@ C      CALL CPYVN(6,VI,VIN)
       AGAIN =.FALSE.
       CALL IZEROS (36,MAT)
       IF ( (ABS(VIN(1)).GT.ABS(VIN(2))+DELTA) .OR.
-     2 (ABS(VIN(1)-VIN(2)).LE.DELTA
+     2 (VIN(1).EQ.VIN(2) .AND. DELTA.LT.1.D-6
      3 .AND. ABS(VIN(4)).GT.ABS(VIN(5))+DELTA) ) THEN
          MAT(2) = 1
          MAT(7) = 1
@@ -1568,7 +1583,7 @@ C      CALL CPYVN(6,VI,VIN)
          MAT(36) = 1
          AGAIN = .TRUE.
       ELSEIF ( (ABS(VIN(2)).GT.ABS(VIN(3))+DELTA) .OR.
-     2 (ABS(VIN(2)-VIN(3)).LE.DELTA
+     2 (VIN(2).EQ.VIN(3) .AND. DELTA.LT.1.D-6
      3 .AND. ABS(VIN(5)).GT.ABS(VIN(6))+DELTA) ) THEN
          MAT(1) = 1
          MAT(14) = 1
@@ -1736,7 +1751,7 @@ C     Convert to standard presentation, M is the matrix
 C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
       ELSEIF ( ABS((VIN(4)+VIN(5)+VIN(6)
      2 +ABS(VIN(1))+ABS(VIN(2))))
-     3 .LE.DELTA .AND.
+     3 .LE.-DELTA .AND.
      4 ( 2.0D0*(ABS(VIN(1))+VIN(5))+VIN(6).GT.DELTA) ) THEN
          DO 3000 I=13,18
  3000    M1(I) = 1
