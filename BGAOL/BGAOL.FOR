@@ -267,12 +267,12 @@ C----------------------------------------------------------------------C
          WRITE (*,'('' Red. Vector '',6F10.5)') GRED
          if (DEBUGD) THEN
          WRITE (*,*) "G6 Reduction Matrix:"
-         WRITE (*,'(12x,6I6)') MRED 
+         WRITE (*,'(12x,6I6)') MRED
          ENDIF
          CALL g6toe3(MRED,M3RED)
          WRITE (*,*) "E3 Reduction Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
- 
+
          CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
 
          DO 4000 I=1,NPROJ
@@ -291,25 +291,25 @@ C----------------------------------------------------------------------C
             CALL REDUCE (V(1,IV),MRTEST,VTEST,
      2           0.D0,'REDUCE')
             CALL vdifn(6,V(1,IV),VTEST,VTEST)
-            if (anorm(6,VTEST).le.ERRSIZ*1.e-6) 
+            if (anorm(6,VTEST).le.ERRSIZ*1.e-6)
      2        AMRED=.true.
             AMNEARRED = .false.
             CALL REDUCE (V(1,IV),MRTEST,VTEST,
      2           MIN(.5D0,ERRSIZ/2.D0),'REDUCE')
             CALL vdifn(6,V(1,IV),VTEST,VTEST)
-            if (anorm(6,VTEST).le.ERRSIZ/2.D0) 
+            if (anorm(6,VTEST).le.ERRSIZ/2.D0)
      2        AMNEARRED=.true.
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
             DCURR = DOTVN(6,AG,AG)
-            IF ( ((DCURR .LT. DBEST-1.D-10) 
+            IF ( ((DCURR .LT. DBEST-1.D-10)
      2        .OR. ((.NOT.REDUCED(I)).AND.AMRED)
      3        .OR. ((.NOT.NEARREDUCED(I)).AND.AMNEARRED))
      4        .AND. SQRT(DCURR).LE.ERRSIZ*3.5D0
      5        .AND. (TG(1).GT.1.0D0 .AND. TG(2).GT.1.0D0
      2        .AND. TG(3).GT.1.0D0
      3        .AND. (
-     4           (TG(4)*TG(5)*TG(6) .LE. 1.E-4 
+     4           (TG(4)*TG(5)*TG(6) .LE. 1.E-4
      5            .AND. ITDESG(I).LT.0)
      6           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
      7            .AND. ITDESG(I).GT.0)))) THEN
@@ -324,19 +324,19 @@ C----------------------------------------------------------------------C
      *             VRED(2,I),VRED(3,I),VRED(4,I),
      *             VRED(5,I),VRED(6,I)
                  WRITE (*,*) "G6 Reduction Matrix:"
-                 WRITE (*,'(12x,6I6)') MRTEST 
+                 WRITE (*,'(12x,6I6)') MRTEST
                ENDIF
             ENDIF
 
  3000       CONTINUE
 
-            IF (DSQRT(DOTVN(6,AVBEST,AVBEST)) .GT. ERRSIZ*3.5D0) 
+            IF (DSQRT(DOTVN(6,AVBEST,AVBEST)) .GT. ERRSIZ*3.5D0)
      *        GO TO 4000
             IF (DSQRT(DBEST) .LE. 999.0) THEN
                sprefix = " NON"
                if (NEARREDUCED(I)) sprefix = "NEAR"
                if (REDUCED(I)) sprefix = "    "
-        
+
                WRITE (*,*)
                IF (ITDESG(I).GT.0) THEN
                WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
@@ -358,13 +358,13 @@ C----------------------------------------------------------------------C
                BEST(I) = DSQRT(DOTVN(6,AVBEST,AVBEST))
                call cpyvn(6,TG,VOUT(1,I))
                WRITE (*,*)
-               call UncenterVector( VBEST, ITDESG(I), 
+               call UncenterVector( VBEST, ITDESG(I),
      *             CHRLAT(I), NewCell(1,I) )
-               call CalculateCenteredCell( NewCell(1,I), 
+               call CalculateCenteredCell( NewCell(1,I),
      *             CenteredCell(1,I) )
-               write(*,"(8H G6 cell, 6F9.3)" ) 
+               write(*,"(8H G6 cell, 6F9.3)" )
      *             (NewCell(JJ,I),JJ=1,6)
-               write(*,"(8H E3 cell, 6F9.3)" ) 
+               write(*,"(8H E3 cell, 6F9.3)" )
      *             (CenteredCell(JJ,I),JJ=1,6)
                WRITE (*,*)
             ELSE
@@ -397,7 +397,7 @@ C----------------------------------------------------------------------C
       band = ERRSIZ/2
       bandcount = 0
       DO 5000 i=1,NPROJ
-         IF ( BEST(IORD(I)) .ge. 0 
+         IF ( BEST(IORD(I)) .ge. 0
      *     .and. ((REDUCED(IORD(I)).and.iv.eq.1)
      *        .or. ((.NOT.REDUCED(IORD(I)))
      *           .and.NEARREDUCED(IORD(I))
@@ -415,7 +415,7 @@ C----------------------------------------------------------------------C
            ENDIF
            sprefix = " NON"
            if (NEARREDUCED(IORD(I))) sprefix = "NEAR"
-           if (REDUCED(IORD(I))) sprefix = "    "   
+           if (REDUCED(IORD(I))) sprefix = "    "
            if (ITDESG(IORD(I)).GT.0) then
            WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A4,
      2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
@@ -2233,7 +2233,7 @@ C**********************************************************************C
 
 
       data ngtype(30) /-39/
-      data lattyp(30) /'mS'/
+      data lattyp(30) /'mC'/
       data pjnorm(30) /2D0/
       data (projct(i,30),i=1,36) /
      1  1, 0, 0, 0, 0,-1,
@@ -2245,7 +2245,7 @@ C**********************************************************************C
 
 
       data ngtype(31) /-41/
-      data lattyp(31) /'mS'/
+      data lattyp(31) /'mC'/
       data pjnorm(31) /2D0/
       data (projct(i,31),i=1,36) /
      1  2, 0, 0, 0, 0, 0,
@@ -2257,7 +2257,7 @@ C**********************************************************************C
 
 
       data ngtype(32) /-37/
-      data lattyp(32) /'mS'/
+      data lattyp(32) /'mC'/
       data pjnorm(32) /2D0/
       data (projct(i,32),i=1,36) /
      1  1, 0, 0, 0,-1, 0,
@@ -2269,7 +2269,7 @@ C**********************************************************************C
 
 
       data ngtype(33) /10/
-      data lattyp(33) /'mS'/
+      data lattyp(33) /'mC'/
       data pjnorm(33) /2D0/
       data (projct(i,33),i=1,36) /
      1  1,1,0,0,0,0,
@@ -2281,7 +2281,7 @@ C**********************************************************************C
 
 
       data ngtype(34) /-14/
-      data lattyp(34) /'mS'/
+      data lattyp(34) /'mC'/
       data pjnorm(34) /2D0/
       data (projct(i,34),i=1,36) /
      1  1,1,0,0,0,0,
@@ -2293,7 +2293,7 @@ C**********************************************************************C
 
 
       data ngtype(35) /20/
-      data lattyp(35) /'mS'/
+      data lattyp(35) /'mC'/
       data pjnorm(35) /2D0/
       data (projct(i,35),i=1,36) /
      1  2,0,0,0,0,0,
@@ -2305,7 +2305,7 @@ C**********************************************************************C
 
 
       data ngtype(36) /-25/
-      data lattyp(36) /'mS'/
+      data lattyp(36) /'mC'/
       data pjnorm(36) /2D0/
       data (projct(i,36),i=1,36) /
      1  2,0,0,0,0,0,
@@ -2317,7 +2317,7 @@ C**********************************************************************C
 
 
       data ngtype(37) /28/
-      data lattyp(37) /'mS'/
+      data lattyp(37) /'mC'/
       data pjnorm(37) /10D0/
       data (projct(i,37),i=1,36) /
      1  5, 0, 0, 0, 5, 0,
@@ -2329,7 +2329,7 @@ C**********************************************************************C
 
 
       data ngtype(38) /30/
-      data lattyp(38) /'mS'/
+      data lattyp(38) /'mC'/
       data pjnorm(38) /10D0/
       data (projct(i,38),i=1,36) /
      1  10, 0, 0, 0, 0, 0,
@@ -2341,7 +2341,7 @@ C**********************************************************************C
 
 
       data ngtype(39) /29/
-      data lattyp(39) /'mS'/
+      data lattyp(39) /'mC'/
       data pjnorm(39) /10D0/
       data (projct(i,39),i=1,36) /
      1  5, 0, 0, 0, 0, 5,
@@ -2353,7 +2353,7 @@ C**********************************************************************C
 
 
       data ngtype(40) /-43/
-      data lattyp(40) /'mS'/
+      data lattyp(40) /'mI'/
       data pjnorm(40) /20D0/
       data (projct(i,40),i=1,36) /
      1  11, 1, 0, 1,-9,-4,
@@ -2365,7 +2365,7 @@ C**********************************************************************C
 
 
       data ngtype(41) /-17/
-      data lattyp(41) /'mS'/
+      data lattyp(41) /'mI'/
       data pjnorm(41) /10D0/
       data (projct(i,41),i=1,36) /
      1  3, 3, 0,-2,-2,-2,
@@ -2377,7 +2377,7 @@ C**********************************************************************C
 
 
       data ngtype(42) /27/
-      data lattyp(42) /'mS'/
+      data lattyp(42) /'mI'/
       data pjnorm(42) /3D0/
       data (projct(i,42),i=1,36) /
      1  1,0,0,0,1,1,
@@ -2773,7 +2773,7 @@ C**********************************************************************C
       subroutine  v2Cart(v ,v1,v2,v3 )
       implicit none
       real*8 v(6),v1(3),v2(3),v3(3),cell(6)
-      real*8 mat8, SinAl, SinBe, SinGA, Root, Sqr 
+      real*8 mat8, SinAl, SinBe, SinGA, Root, Sqr
 C-----------------------------------------------------------------------
       Cell(1) = Root(v(1))
       Cell(2) = Root(v(2))
