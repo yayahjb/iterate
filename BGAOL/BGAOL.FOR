@@ -147,6 +147,7 @@ C
       include "MKREFL.FOR"
       include "near6.for"
       include "E3TOG6.FOR"
+      include "MKGAOL.FOR"
 
 C**********************************************************************C
       PROGRAM RED
@@ -168,18 +169,19 @@ C**********************************************************************C
       real*8 VRED(6,MAXPRJ)
       real*8 VOUT(6,MAXPRJ)
       real*8 MPRIM(36)
-      INTEGER MRED(36),MRTEST(36),IUM(36),MTEMP(36)
+      INTEGER MRED(36),MRTEST(36),IUM(36)
       real*8 M3RED(3,3)
       real*8 GOUT(6),GRED(6),CRED(6),VTEST(6)
       real*8 ZEROS(6)
       LOGICAL INPCEL
+      CHARACTER*1 MODEC
+      integer modef
       EXTERNAL INPCEL
       CHARACTER LATSYM
       integer nvmax, mxtree
       integer iv, nv
       real*8 band
       integer bandcount
-      integer INRMSQ
       logical DEBUG, DEBUGD
 
       real*8 dbest, dcurr
@@ -187,14 +189,15 @@ C**********************************************************************C
       PARAMETER (NVMAX=100000)
       PARAMETER (MXTREE=11*NVMAX)
       real*8 TREE(MXTREE)
-      real*8 V(6,NVMAX)
+      real*8 V(6,NVMAX), VDIST(NVMAX)
       real*8 VBEST(6),AVBEST(6)
       real*8 NewCell(6,MAXPRJ)
       real*8 CenteredCell(6,MAXPRJ)
+      integer IVB(NVMAX)
 
       real*8 DOTVN
       EXTERNAL DOTVN
-      INTEGER NPROJ,I,J,II,JJ
+      INTEGER NPROJ,I,J,JJ
       real*8 RATIO,SIZE,ERRSIZ
       real*8 anorm
 
@@ -205,6 +208,8 @@ C**********************************************************************C
       character*4 sprefix
 
       CHARACTER *100 TITLE
+
+      LOGICAL NEARRED
 
       DATA ZEROS /6*0.0/
       DATA bnames/ '1','2','3','4','5','6','7','8','9',
@@ -227,7 +232,7 @@ C----------------------------------------------------------------------C
 
   100 continue
 
-      IF ( .NOT. INPCEL(LATSYM,TITLE,CV,CE)) THEN
+      IF ( .NOT. INPCEL(LATSYM,MODEC,TITLE,CV,CE)) THEN
          GO TO 9000
       ELSEIF ( LATSYM .eq. "Q" ) THEN
          GO TO 9000
@@ -273,7 +278,18 @@ C----------------------------------------------------------------------C
          WRITE (*,*) "E3 Reduction Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
 
+         do modef = 1,2
+         IF ((MODEC.EQ." ".OR.MODEC.EQ.'I').AND. modef.eq.1) THEN
+         WRITE(*,*) "UNCONSTRAINED ITERATIVE MODE SEARCH"
          CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
+         ELSEIF ((MODEC.EQ." ".OR.MODEC.EQ.'B').AND. modef.eq.2)
+     *     THEN
+         WRITE(*,*) "NIGGLI CONE BOUNDARY-CONSTRAINED SEARCH"
+         CALL MKGAOL (MXTREE,TREE,NVMAX,V,NV,GRED,GE,RATIO,
+     *     VDIST,IVB,'MKGAOL')
+         ELSE
+           GO TO 6000
+         ENDIF
 
          DO 4000 I=1,NPROJ
             BEST(I) = -19191
@@ -287,18 +303,10 @@ C----------------------------------------------------------------------C
                AP(J) = 1.0D0 + AP(J)
  2000       CONTINUE
             DO 3000  IV=1,NV
-            AMRED = .false.
-            CALL REDUCE (V(1,IV),MRTEST,VTEST,
-     2           0.D0,'REDUCE')
-            CALL vdifn(6,V(1,IV),VTEST,VTEST)
-            if (anorm(6,VTEST).le.ERRSIZ*1.e-6)
-     2        AMRED=.true.
-            AMNEARRED = .false.
-            CALL REDUCE (V(1,IV),MRTEST,VTEST,
-     2           MIN(.5D0,ERRSIZ/2.D0),'REDUCE')
-            CALL vdifn(6,V(1,IV),VTEST,VTEST)
-            if (anorm(6,VTEST).le.ERRSIZ/2.D0)
-     2        AMNEARRED=.true.
+              AMRED = NEARRED(V(1,IV),0.0D0,"NEARRED")
+              AMNEARRED = NEARRED(V(1,IV),
+     *        MIN(.5D0,ERRSIZ/2.D0),"NEARRED")
+            if (AMRED) AMNEARRED = .true.
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
             DCURR = DOTVN(6,AG,AG)
@@ -388,6 +396,12 @@ C----------------------------------------------------------------------C
  4000    CONTINUE
 
       call SortDists(NPROJ, BEST, IORD, ERRSIZ)
+      if (modef.eq.1)
+     *  WRITE(*,*) "UNCONSTRAINED ITERATIVE MODE SEARCH"
+      if (modef.eq.2)
+     *  WRITE(*,*) "NIGGLI CONE BOUNDARY-CONSTRAINED SEARCH"
+      
+
       write (*,*) "Final List              Lat     Dist    Cell"
       DO iv = 1,3
       WRITE(*, "(1X,A)")"-----------------------------"
@@ -437,6 +451,7 @@ C----------------------------------------------------------------------C
 
 
  6000 CONTINUE
+      enddo
       ENDIF
 
       go to 100
@@ -1221,13 +1236,14 @@ C     input lattice type was "V", expect that it's a vector
       END
 
 C**********************************************************************C
-      LOGICAL FUNCTION INPCEL (LATSYM,TITLE,CV,CE)
+      LOGICAL FUNCTION INPCEL (LATSYM,MODEC,TITLE,CV,CE)
       implicit none
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       EXTERNAL OKCELL
       LOGICAL OKCELL
       CHARACTER *1 LATSYM
+      CHARACTER *1 MODEC
       CHARACTER *100 TITLE
       CHARACTER *102 INPUTLINE
       real*8 CV(6),CE(6)
@@ -1238,6 +1254,7 @@ C----------------------------------------------------------------------C
       WRITE (*,*) ' Input Xtal Class '
       READ (*,"(A100)", END=9000, ERR=9000 ) INPUTLINE
       LATSYM = INPUTLINE(1:1)
+      MODEC = INPUTLINE(2:2)
       TITLE = INPUTLINE(3:102)
 
       IF (ICHAR(LATSYM) .GE. ICHAR('a')
@@ -1712,7 +1729,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(4)-VIN(2)).LE.DELTA
      2            .AND. 2.0D0*VIN(5)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(4)+VIN(2)).LE.DELTA
-     4            .AND. VIN(6)+DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(6)-DELTA.LT.0.0D0)) THEN
          M1(14) = 1
          M1(16) = INT(-dsign(1.0D0,VIN(4)))
          M1(20) = 2*M1(16)
@@ -1725,7 +1742,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(5)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(5)+VIN(1)).LE.DELTA
-     4            .AND. VIN(6)+DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(6)-DELTA.LT.0.0D0)) THEN
          M1(13) = 1
          M1(17) = INT(-dsign(1.0D0,VIN(5)))
          M1(24) = M1(17)
@@ -1738,7 +1755,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(6)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(5)) .OR.
      3         (ABS(VIN(6)+VIN(1)).LE.DELTA
-     4            .AND. VIN(5)+DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(5)-DELTA.LT.0.0D0)) THEN
          M1(7) = 1
          M1(12) = INT(-dsign(1.0D0,VIN(6)))
          M1(23) = M1(12)
@@ -1751,7 +1768,7 @@ C     Convert to standard presentation, M is the matrix
 C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
       ELSEIF ( ABS((VIN(4)+VIN(5)+VIN(6)
      2 +ABS(VIN(1))+ABS(VIN(2))))
-     3 .LE.-DELTA .AND.
+     3 .LE.DELTA .AND.
      4 ( 2.0D0*(ABS(VIN(1))+VIN(5))+VIN(6).GT.DELTA) ) THEN
          DO 3000 I=13,18
  3000    M1(I) = 1
@@ -1784,6 +1801,101 @@ C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
 
       NCYCLE = NCYCLE + 1
       IF (NCYCLE .LT. 25 .AND. AGAIN) GO TO 1000
+      END
+
+C**********************************************************************C
+      LOGICAL FUNCTION NEARRED (GVEC,DELTA,TEST)
+C
+C     RETURNS .true. IF GVEC IS NEARLY NIGGLI REDUCED
+C     ALLOWING A NON_REDUCTION ERROR OF DELTA.  NO
+C     MATRICES OR VECTORS ARE KEPT.
+C
+C     IF DELTA .EQ. 0.D0, THE TESTS ARE ON REDUCTION
+C     RATHER THAN NEAR REDUCTION
+C
+C     ALL CASES OF BEING ON THE WRONG SIDES OF THE
+C     FOLDING BOUNDARIES ARE ACCEPTED AS NEAR
+C     REDUCED
+C
+      implicit none
+      CHARACTER*7 TEST
+
+      real*8 GVEC(6)
+      real*8 DELTA
+      real*8 ZEROS(6)
+      DATA ZEROS /6*0.0/
+C----------------------------------------------------------------------C
+
+      IF (TEST .NE. 'NEARRED') THEN
+         WRITE (*,*) ' TEST WAS WRONG IN NEARRED'
+         STOP
+      ENDIF
+      
+      NEARRED = .false.
+C
+C     TEST FOR G1, G2, G3 OUT OF BOUNDS OR WRONG ORDER
+C
+      IF (GVEC(1) .LT. -DELTA
+     *  .OR. GVEC(2) .LT. -DELTA
+     *  .OR. GVEC(2) .LT. -DELTA
+     *  .OR. GVEC(1) .GT. GVEC(2)+DELTA
+     *  .OR. GVEC(2) .GT. GVEC(3)+DELTA) RETURN
+C
+C     TEST FOR NON-REDUCED SIGN COMBINATIONS IN
+C     G4, G5 AND G6
+C
+      IF (GVEC(4) .LE. DELTA
+     *   .OR. GVEC(5) .LE. DELTA
+     *   .OR. GVEC(6) .LE. DELTA) THEN
+        IF (GVEC(4) .GT. DELTA
+     *   .OR. GVEC(5) .GT. DELTA
+     *   .OR. GVEC(6) .GT. DELTA) return
+      ENDIF
+C
+C     TEST ABS(G{4,5,6}) AGAINST G{1,2,3}
+C
+      IF (ABS(GVEC(4)) .GT. ABS(GVEC(2)) + DELTA
+     *  .OR. ABS(GVEC(5)) .GT. ABS(GVEC(1)) + DELTA
+     *  .OR. ABS(GVEC(6)) .GT. ABS(GVEC(1)) + DELTA)
+     *  RETURN
+C
+C     TEST THE BODY DIAGONAL
+C
+      IF (GVEC(4)+GVEC(5)+GVEC(6)+
+     *  ABS(GVEC(1))+ABS(GVEC(2))+DELTA
+     2  .LT. 0.0D0) RETURN
+
+C     IF DELTA IS NON-ZERO, WE STOP HERE
+
+      IF (DELTA .GT. 0.0D0) THEN
+        NEARRED = .true.
+        RETURN
+      ENDIF
+
+C
+C     TEST THE 678, 9AB, CDE BOUNDARY FOLDS
+C
+      IF ((GVEC(4).EQ.GVEC(2).AND.
+     *  2.D0*GVEC(5) .LT. GVEC(6)) .OR.
+     *  (GVEC(4) + GVEC(2) .EQ. 0.D0 .AND.
+     *  GVEC(6).LT.0.0D0) .OR.
+     *  (GVEC(5).eq.GVEC(1).AND.
+     *  2.D0*GVEC(4) .LT. GVEC(6)) .OR.
+     *  (GVEC(5)+ GVEC(1) .EQ. 0.D0 .AND.
+     *  GVEC(6).LT.0.0D0) .OR.
+     *  (GVEC(6).eq.GVEC(1).AND.
+     *  2.D0*GVEC(4) .LT. GVEC(5)) .OR.
+     *  (GVEC(6)+ GVEC(1) .EQ. 0.D0 .AND.
+     *  GVEC(5).LT.0.0D0)) RETURN
+C
+C     TEST THE F BOUDARY FOLD
+C
+      IF (GVEC(4)+GVEC(5)+GVEC(6)+GVEC(1)+GVEC(2)
+     *  .EQ. 0.D0 .AND.
+     * 2.D0*(GVEC(1)+GVEC(5))+GVEC(6).GT.0D0) RETURN
+
+      NEARRED = .true.
+
       END
 
 
