@@ -310,18 +310,22 @@ C----------------------------------------------------------------------C
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
             DCURR = DOTVN(6,AG,AG)
+            IF (modef.eq.2) 
+     *        DCURR = DCURR+VDIST(IV)*VDIST(IV)
             IF ( ((DCURR .LT. DBEST-1.D-10)
      2        .OR. ((.NOT.REDUCED(I)).AND.AMRED)
      3        .OR. ((.NOT.NEARREDUCED(I)).AND.AMNEARRED))
      4        .AND. SQRT(DCURR).LE.ERRSIZ*3.5D0
      5        .AND. (TG(1).GT.1.0D0 .AND. TG(2).GT.1.0D0
-     2        .AND. TG(3).GT.1.0D0
-     3        .AND. (
-     4           (TG(4)*TG(5)*TG(6) .LE. 1.E-4
-     5            .AND. ITDESG(I).LT.0)
-     6           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
-     7            .AND. ITDESG(I).GT.0)))) THEN
+     6        .AND. TG(3).GT.1.0D0
+     7        .AND. (
+     8           (TG(4)*TG(5)*TG(6) .LE. 1.E-4
+     9            .AND. ITDESG(I).LT.0)
+     A           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
+     B            .AND. ITDESG(I).GT.0)))) THEN
                DBEST = DOTVN(6,AG,AG)
+               IF (modef.eq.2) 
+     *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
                CALL CPYVN(6,TG,VBEST)
                CALL CPYVN(6,AG,AVBEST)
                CALL CPYVN(6,V(1,IV),VRED(1,I))
@@ -338,13 +342,13 @@ C----------------------------------------------------------------------C
 
  3000       CONTINUE
 
-            IF (DSQRT(DOTVN(6,AVBEST,AVBEST)) .GT. ERRSIZ*3.5D0)
+            IF (DSQRT(DBEST) .GT. ERRSIZ*3.5D0)
      *        GO TO 4000
             IF (DSQRT(DBEST) .LE. 999.0) THEN
                sprefix = " NON"
                if (NEARREDUCED(I)) sprefix = "NEAR"
                if (REDUCED(I)) sprefix = "    "
-
+               BEST(I) = DSQRT(DBEST)
                WRITE (*,*)
                IF (ITDESG(I).GT.0) THEN
                WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
@@ -358,12 +362,11 @@ C----------------------------------------------------------------------C
      4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ENDIF
                WRITE (*,'(6X,F5.1,1X,F5.2,3H V=,6F8.1)')
-     2             DSQRT(DOTVN(6,AVBEST,AVBEST)),
-     3             DSQRT(DOTVN(6,AVBEST,AVBEST))/ERRSIZ,VBEST
+     2             BEST(I),
+     3             BEST(I)/ERRSIZ,VBEST
                CALL G6TOC (VBEST,COUT,'G6TOC ')
                WRITE (*,'(6X,''cell'',8X,2(3F8.2,'' ''))') COUT
 
-               BEST(I) = DSQRT(DOTVN(6,AVBEST,AVBEST))
                call cpyvn(6,TG,VOUT(1,I))
                WRITE (*,*)
                call UncenterVector( VBEST, ITDESG(I),
@@ -1729,7 +1732,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(4)-VIN(2)).LE.DELTA
      2            .AND. 2.0D0*VIN(5)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(4)+VIN(2)).LE.DELTA
-     4            .AND. VIN(6)-DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(6)-DELTA.LE.0.0D0)) THEN
          M1(14) = 1
          M1(16) = INT(-dsign(1.0D0,VIN(4)))
          M1(20) = 2*M1(16)
@@ -1742,7 +1745,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(5)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(5)+VIN(1)).LE.DELTA
-     4            .AND. VIN(6)-DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(6)-DELTA.LE.0.0D0)) THEN
          M1(13) = 1
          M1(17) = INT(-dsign(1.0D0,VIN(5)))
          M1(24) = M1(17)
@@ -1755,7 +1758,7 @@ C     Convert to standard presentation, M is the matrix
       ELSEIF ( (ABS(VIN(6)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(5)) .OR.
      3         (ABS(VIN(6)+VIN(1)).LE.DELTA
-     4            .AND. VIN(5)-DELTA.LT.0.0D0)) THEN
+     4            .AND. VIN(5)-DELTA.LE.0.0D0)) THEN
          M1(7) = 1
          M1(12) = INT(-dsign(1.0D0,VIN(6)))
          M1(23) = M1(12)
@@ -1878,15 +1881,15 @@ C
       IF ((GVEC(4).EQ.GVEC(2).AND.
      *  2.D0*GVEC(5) .LT. GVEC(6)) .OR.
      *  (GVEC(4) + GVEC(2) .EQ. 0.D0 .AND.
-     *  GVEC(6).LT.0.0D0) .OR.
+     *  GVEC(6).LE.0.0D0) .OR.
      *  (GVEC(5).eq.GVEC(1).AND.
      *  2.D0*GVEC(4) .LT. GVEC(6)) .OR.
      *  (GVEC(5)+ GVEC(1) .EQ. 0.D0 .AND.
-     *  GVEC(6).LT.0.0D0) .OR.
+     *  GVEC(6).LE.0.0D0) .OR.
      *  (GVEC(6).eq.GVEC(1).AND.
      *  2.D0*GVEC(4) .LT. GVEC(5)) .OR.
      *  (GVEC(6)+ GVEC(1) .EQ. 0.D0 .AND.
-     *  GVEC(5).LT.0.0D0)) RETURN
+     *  GVEC(5).LE.0.0D0)) RETURN
 C
 C     TEST THE F BOUDARY FOLD
 C

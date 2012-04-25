@@ -462,7 +462,7 @@ C     Populate the tree with the original cell and
 C     the nearby neighbors on the boundary
       NV = NV+1
 C      write(*,*) "calling bldtre"
-      CALL BLDTRE (MXTREE,GRED,NV,TREE,'BLDTRE')
+      CALL BLDTRE (MXTREE,GRED,NV*16,TREE,'BLDTRE')
       CALL CPYVN(6,GRED,V(1,NV))
 C      call printg6('Storing ',GRED)
       do i = 1,15
@@ -471,7 +471,7 @@ C      call printg6('Storing ',GRED)
           IF (NEARST(MXTREE,SEEDS(1,i),DMIN,TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV + 1
-            CALL BLDTRE (MXTREE,SEEDS(1,i),NV,TREE,'BLDTRE')
+            CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,SEEDS(1,i),V(1,NV))
 C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
@@ -542,7 +542,7 @@ C                     write(*,*)"storing ",
 C     *               (NEWSEEDS(jj,IREFL2,IREFL),jj=1,6)
                      CALL BLDTRE (MXTREE,
      2                 NEWSEEDS(1,IREFL2,IREFL),
-     3                 NV,TREE,'BLDTRE')
+     3                 NV*16+IREFL,TREE,'BLDTRE')
                        CALL CPYVN(6,NEWSEEDS(1,IREFL2,IREFL),
      2                   V(1,NV))
                        IVB(NV) = ISEED(IREFL)
