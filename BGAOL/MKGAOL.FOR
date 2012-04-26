@@ -88,7 +88,7 @@ C**********************************************************************C
       INTEGER ISEED(15)
       real*8 SEEDS(6,15)
       real*8 NEWSEEDS(6,15,15)
-      real*8 SEEDDIST(15),NEWSEEDDIST(15)
+      real*8 SEEDDIST(15),NEWSEEDDIST(15,15)
       LOGICAL GOODSEED(15),NEWGOODSEED(15,15)
 
       real*8 prj(36,21), prjperp(36,21)
@@ -442,6 +442,10 @@ C     polytope
       
       do i = 1,21
         call MKPERP(PRJ(1,i),PRJPERP(1,i))
+        if (i.eq.2) THEN
+C          write(*,'(A,6(6f8.3/))')
+C     *      "PRJPERP(2)",(PRJPERP(jj,i),jj=1,36)
+        endif
       enddo
       
 C     Generate seed points on each of the 15 boundaries      
@@ -464,6 +468,9 @@ C     the nearby neighbors on the boundary
 C      write(*,*) "calling bldtre"
       CALL BLDTRE (MXTREE,GRED,NV*16,TREE,'BLDTRE')
       CALL CPYVN(6,GRED,V(1,NV))
+      IVB(NV) = 0
+      VDIST(NV) = 0.D0
+C      write(*,*)"SEED DIST",NV,SEEDDIST(NV)
 C      call printg6('Storing ',GRED)
       do i = 1,15
         if (GOODSEED(i)) then
@@ -473,6 +480,9 @@ C      call printg6('Storing ',GRED)
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,SEEDS(1,i),V(1,NV))
+            IVB(NV) = i
+            VDIST(NV) = SEEDDIST(i)
+C            write(*,*)"SEED DIST",NV,SEEDDIST(NV)
 C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
         else
@@ -524,7 +534,7 @@ C           write(*,*) IREFL, (SEEDS(jj,IREFL),jj=1,6)
 C           write(*,*) "MS",(MS(jj,IREFL),jj=1,36)
 C           write(*,*) VT
            call GENSEEDS(vt,NEWGE,NEWSEEDS(1,1,IREFL),
-     *       NEWSEEDDIST, NEWGOODSEED(1,IREFL), 
+     *       NEWSEEDDIST(1,IREFL), NEWGOODSEED(1,IREFL), 
      *       PRJ, PRJPERP)
            DO IREFL2 = 1,15
              IF (NEWGOODSEED(IREFL2,IREFL)) THEN
@@ -546,7 +556,9 @@ C     *               (NEWSEEDS(jj,IREFL2,IREFL),jj=1,6)
                        CALL CPYVN(6,NEWSEEDS(1,IREFL2,IREFL),
      2                   V(1,NV))
                        IVB(NV) = ISEED(IREFL)
-                       VDIST(NV) = SEEDDIST(IVB(NV))
+                       VDIST(NV) = SQRT(SEEDDIST(IVB(NV))**2
+     *                   + NEWSEEDDIST(IREFL2,IREFL)**2)
+C                       write(*,*)"SEED DIST",NV,VDIST(NV)
                  ELSE
 C                     NEWGOODSEED(IREFL2,IREFL) = .false.
                  ENDIF
@@ -559,12 +571,14 @@ C                     NEWGOODSEED(IREFL2,IREFL) = .false.
            ENDDO
          ENDIF
       ENDDO
-      DO i = 1,15
-         GOODSEED(i) = .false.
+      DO IREFL = 1,15
+         GOODSEED(IREFL) = .false.
          DO IREFL2 = 1,15
-           IF (NEWGOODSEED(i,IREFL2)) then
-             CALL CPYVN(6,NEWSEEDS(1,i,IREFL2),SEEDS(1,i))
-             ISEED(i) = IREFL2
+           IF (NEWGOODSEED(IREFL2,IREFL)) then
+             CALL CPYVN(6,NEWSEEDS(1,IREFL2,IREFL),SEEDS(1,IREFL))
+             ISEED(IREFL) = IREFL2
+             SEEDDIST(IREFL) = SQRT(SEEDDIST(IREFL)**2
+     *         + NEWSEEDDIST(IREFL2,IREFL)**2)
            ENDIF
          ENDDO
       ENDDO
