@@ -166,6 +166,8 @@ C**********************************************************************C
       INTEGER PRJ(36,MAXPRJ)
       real*8 P(36),AP(36)
       real*8 CV(6),CE(6),G(6),GE(6),TG(6),AG(6),COUT(6)
+      real*8 TGRED(6)
+      integer TGMRED(36)
       real*8 VRED(6,MAXPRJ)
       real*8 VOUT(6,MAXPRJ)
       real*8 MPRIM(36)
@@ -173,6 +175,7 @@ C**********************************************************************C
       real*8 M3RED(3,3)
       real*8 GOUT(6),GRED(6),CRED(6),VTEST(6)
       real*8 ZEROS(6)
+      real*8 NCDIST
       LOGICAL INPCEL
       CHARACTER*1 MODEC
       integer modef
@@ -184,7 +187,7 @@ C**********************************************************************C
       integer bandcount
       logical DEBUG, DEBUGD
 
-      real*8 dbest, dcurr
+      real*8 dbest, dcurr, dtemp
 
       PARAMETER (NVMAX=100000)
       PARAMETER (MXTREE=11*NVMAX)
@@ -195,7 +198,7 @@ C**********************************************************************C
       real*8 CenteredCell(6,MAXPRJ)
       integer IVB(NVMAX)
 
-      real*8 DOTVN
+      real*8 DOTVN,DISTVN
       EXTERNAL DOTVN
       INTEGER NPROJ,I,J,JJ
       real*8 RATIO,SIZE,ERRSIZ
@@ -312,6 +315,11 @@ C----------------------------------------------------------------------C
             DCURR = DOTVN(6,AG,AG)
             IF (modef.eq.2) 
      *        DCURR = DCURR+VDIST(IV)*VDIST(IV)
+            if (Modef.eq.2) THEN
+C              write(*,*)"TG",TG
+C              write(*,*)"AG",AG
+C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
+            endif
             IF ( ((DCURR .LT. DBEST-1.D-10)
      2        .OR. ((.NOT.REDUCED(I)).AND.AMRED)
      3        .OR. ((.NOT.NEARREDUCED(I)).AND.AMNEARRED))
@@ -323,9 +331,21 @@ C----------------------------------------------------------------------C
      9            .AND. ITDESG(I).LT.0)
      A           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
      B            .AND. ITDESG(I).GT.0)))) THEN
+               DTEMP = DISTVN(6,GRED,TG)**2
                DBEST = DOTVN(6,AG,AG)
                IF (modef.eq.2) 
      *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
+               IF (DTEMP.LT.DBEST) DBEST=DTEMP
+               CALL REDUCE (TG,TGMRED,TGRED,0.D0,'REDUCE')
+               IF (ABS(NCDIST(GRED,TGRED)-sqrt(dbest))
+     *           .gt.1.d-8.and.modef.eq.2) THEN
+                 write(*,'(a,6f10.3)') "GRED  ",GRED
+                 write(*,'(a,6f10.3)') "TGRED ",TGRED
+                 write(*,*) "NCDIST, old dist, DELTA",
+     *             NCDIST(GRED,TGRED), sqrt(dbest),
+     *             -NCDIST(GRED,TGRED)+sqrt(dbest)
+                 write(*,*)
+               ENDIF
                CALL CPYVN(6,TG,VBEST)
                CALL CPYVN(6,AG,AVBEST)
                CALL CPYVN(6,V(1,IV),VRED(1,I))
@@ -1084,6 +1104,34 @@ C----------------------------------------------------------------------C
          DOTVN = DOTVN + V1(I)*V2(I)
  1000 CONTINUE
       END
+
+
+C**********************************************************************C
+      REAL*8 FUNCTION DISTVN (N,V1,V2)
+      implicit none
+      real*8 V1(N),V2(N)
+      integer i,n
+C----------------------------------------------------------------------C
+      DISTVN = 0.0
+      DO 1000 I=1,N
+         DISTVN = DISTVN + (V1(I)-V2(I))*(V1(I)-V2(I))
+ 1000 CONTINUE
+      DISTVN = SQRT(DISTVN)
+      END
+
+C**********************************************************************C
+      REAL*8 FUNCTION DISTVND (N,V1,V2,DELTA)
+      implicit none
+      real*8 V1(N),V2(N),DELTA
+      integer i,n
+C----------------------------------------------------------------------C
+      DISTVND = DELTA*DELTA
+      DO 1000 I=1,N
+         DISTVND = DISTVND + (V1(I)-V2(I))*(V1(I)-V2(I))
+ 1000 CONTINUE
+      DISTVND = SQRT(DISTVND)
+      END
+
 
 C**********************************************************************C
       SUBROUTINE IMV6 (V1,M,V2)
