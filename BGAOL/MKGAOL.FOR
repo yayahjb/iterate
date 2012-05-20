@@ -817,7 +817,7 @@ C        write(*,*) "ind ", ind
           call rmv6(gv2,PRJ(1,ip),pgv2(1,ind))
           call vdifn(6,gv2,pgv2(1,ind),vtemp)
           vdist(ind,2) = anorm(6,vtemp)
-          call foldbed(pgv2(1,ind),fpgv2(1,ind),1.0D-4)
+          call foldbed(pgv2(1,ind),fpgv2(1,ind),1.0D0)
           if (ind.eq.8 .or. ind.eq.11 .or. ind.eq.14) then
             jnd = ind-2
             if (valid1(jnd)) then
@@ -835,7 +835,7 @@ C        write(*,*) "ind ", ind
           call rmv6(gv1,PRJ(1,ip),pgv1(1,ind))
           call vdifn(6,gv1,pgv1(1,ind),vtemp)
           vdist(ind,1) = anorm(6,vtemp)
-          call foldbed(pgv1(1,ind),fpgv1(1,ind),1.0D-4)
+          call foldbed(pgv1(1,ind),fpgv1(1,ind),1.0D0)
           if (valid2(ind)) then
             call vdifn(6,fpgv1(1,ind),fpgv2(1,ind),vtemp)
             vdist(ind,3) = anorm(6,vtemp)**2
