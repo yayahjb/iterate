@@ -277,9 +277,9 @@ C**********************************************************************C
       real*8 NEWGE(6)
       real*8 VT(6)
       real*8 dmin, grmin
-      real*8 dotvn
+      real*8 XDOTVN
       integer IVB(NVMAX)
-      integer i, icycle, irefl, nv1, id, jj
+      integer i, icycle, irefl, nv1, id
       integer irefl2
       integer nearst
       INTEGER MS(36,15)
@@ -466,7 +466,7 @@ C     Generate seed points on each of the 15 boundaries
       enddo
 
       NV = 0
-      DMIN = 0.1*DSQRT(DOTVN(6,GRED,GRED))*RATIO
+      DMIN = 0.1*DSQRT(XDOTVN(6,GRED,GRED))*RATIO
       grmin = gred(1)**2+gred(2)**2+gred(3)**2
       WRITE (*,*) ' DMIN IN MKGOAL ',DMIN
       
@@ -613,7 +613,7 @@ C      WRITE(*,*) "PRJPERP",PRJPERP
       
       SUBROUTINE PRINTG6(TEXT,VECTOR)
       implicit none
-      character(*) TEXT
+      character*(*) TEXT
       real*8 VECTOR(6),FVECTOR(6)
       WRITE(*,'(A,1x,6F9.2)')TEXT,VECTOR
 
@@ -647,7 +647,6 @@ C
       integer i, ip
       real*8 anorm
       logical NEARRED
-      character*20 seedlab
 C----------------------------------------------------------------------C
 
 C     Compute the seeds and the seed distances
@@ -723,7 +722,6 @@ C       3.5 times the errorbox
           if (abs(GVEC(i)-SEEDS(i,ip)) .gt.
      *      3.5D0*GE(i)) GOODSEED(ip) = .false.
         enddo
-C        write(seedlab,*) "SD ",ip,GOODSEED(ip)
 C        call printg6(seedlab,seeds(1,ip))
       enddo
       

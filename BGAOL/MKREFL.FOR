@@ -11,27 +11,33 @@ C**********************************************************************C
       real*8 TREE(MXTREE), V(6,NVMAX), GRED(6)
       real*8 VT(6),VTT(6)
       real*8 dmin, grmin
-      real*8 dotvn
-      integer i, icycle, inner, irefl, mxinnr, nv1, id
+      real*8 XDOTVN
+      integer i, icycle, jcycle, inner, irefl, mxinnr, nv1, id
       integer nearst
       INTEGER REFL(36,24)
       INTEGER SWTCH(36,MXSWTC)
 
-      DATA (SWTCH(I,1),I=1,36)/
-     1 1,0,0, 0,0,0,
-     2 0,1,0, 0,0,0,
-     3 1,0,1, 0,1,0,
-     4 0,0,0, 1,0,1,
-     5 2,0,0, 0,1,0,
-     6 0,0,0, 0,0,1 /
 
+
+C     Case 6, b -> -b, c -> b-c
+      DATA (SWTCH(I,1),I=1,36)/
+     1 1, 0, 0, 0, 0, 0,
+     2 0, 1, 0, 0, 0, 0,
+     3 0, 1, 1,-1, 0, 0,
+     4 0,-2, 0, 1, 0, 0,
+     5 0, 0, 0, 0,-1, 1,
+     6 0, 0, 0, 0, 0,-1 /
+
+C     Case F, c -> -(a+b+c)
       DATA (SWTCH(I,2),I=1,36)/
-     1 1,0,0, 0,0,0,
-     2 0,1,0, 0,0,0,
-     3 1,1,1, 1,1,1,
-     4 0,2,0, 1,0,1,
-     5 2,0,0, 0,1,1,
-     6 0,0,0, 0,0,1 /
+     1 1, 0,0, 0, 0, 0,
+     2 0, 1,0, 0, 0, 0,
+     3 1, 1,1, 1, 1, 1,
+     4 0,-2,0,-1, 0,-1,
+     5 -2,0,0, 0,-1,-1,
+     6 0, 0,0, 0, 0, 1 /
+
+
 
 
       DATA (REFL(I,1),I=1,36) /
@@ -245,24 +251,29 @@ C----------------------------------------------------------------------C
       do 100 i=1,MXTREE
   100 Tree(i) = 0
       NV = 0
-      DMIN = 0.1*DSQRT(DOTVN(6,GRED,GRED))*RATIO
+      DMIN = 0.1*DSQRT(XDOTVN(6,GRED,GRED))*RATIO
       grmin = gred(1)**2+gred(2)**2+gred(3)**2
       WRITE (*,*) ' DMIN IN MKREFL ',DMIN
       DO 4000 ICYCLE=1,MXSWTC+1
       DO 2000 IREFL=1,24
          CALL IMV6(GRED,REFL(1,IREFL),VT)
-         if (vt(1)**2+vt(2)**2+vt(3)**2.lt. 10.0*grmin) then
-           IF (ICYCLE.EQ.1) THEN
+         if (vt(1)**2+vt(2)**2+vt(3)**2.lt. 20.0*grmin) then
+            IF (ICYCLE.EQ.1) THEN
                MXINNR = 1
             ELSE
                MXINNR = 24
                CALL IMV6(VT,SWTCH(1,ICYCLE-1),VTT)
                CALL CPYVN(6,VTT,VT)
             ENDIF
-            DO 1000 INNER=1,MXINNR
+            DO JCYCLE=1,MXSWTC+1
+            DO INNER=1,MXINNR
                IF (ICYCLE.GT.1) THEN
                   CALL IMV6(VT,REFL(1,INNER),VTT)
                   CALL CPYVN(6,VTT,VT)
+                  IF (JCYCLE.GT.1) THEN
+                    CALL IMV6(VT,SWTCH(1,JCYCLE-1),VTT)
+                    CALL CPYVN(6,VTT,VT)
+                  ENDIF
                ENDIF
                NV1 = NV + 1
                IF (NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,'NEARST') .EQ. 0)
@@ -272,7 +283,8 @@ C----------------------------------------------------------------------C
                   CALL CPYVN(6,VT,V(1,NV))
 C LCA                  WRITE (*,'('' SCAN '',i4,6F11.5)') NV, VT
                ENDIF
- 1000       CONTINUE
+           ENDDO
+           ENDDO
          endif
  2000 CONTINUE
  4000 CONTINUE

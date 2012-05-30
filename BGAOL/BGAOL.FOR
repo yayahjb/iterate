@@ -173,7 +173,7 @@ C**********************************************************************C
       real*8 MPRIM(36)
       INTEGER MRED(36),MRTEST(36),IUM(36)
       real*8 M3RED(3,3)
-      real*8 GOUT(6),GRED(6),CRED(6),VTEST(6)
+      real*8 GOUT(6),GRED(6),CRED(6)
       real*8 ZEROS(6)
       real*8 NCDIST
       LOGICAL INPCEL
@@ -198,11 +198,10 @@ C**********************************************************************C
       real*8 CenteredCell(6,MAXPRJ)
       integer IVB(NVMAX)
 
-      real*8 DOTVN,DISTVN
-      EXTERNAL DOTVN
+      real*8 XDOTVN,DISTVN
+      EXTERNAL XDOTVN
       INTEGER NPROJ,I,J,JJ
       real*8 RATIO,SIZE,ERRSIZ
-      real*8 anorm
 
       REAL*8 BEST(42)
       real*8 distances2Boundaries(21)
@@ -265,7 +264,7 @@ C----------------------------------------------------------------------C
          CALL REDUCE (GOUT,MRED,GRED,0.D0,'REDUCE')
          CALL CHKVEC(GRED)
          CALL G6TOC (GRED,CRED,'G6TOC ')
-         SIZE = DSQRT(DOTVN(6,GRED,GRED))
+         SIZE = DSQRT(XDOTVN(6,GRED,GRED))
 
          ERRSIZ = RATIO * SIZE
          WRITE (*,*)
@@ -312,7 +311,7 @@ C----------------------------------------------------------------------C
             if (AMRED) AMNEARRED = .true.
             CALL RMV6 (V(1,IV),AP,AG)
             CALL RMV6 (V(1,IV),P,TG)
-            DCURR = DOTVN(6,AG,AG)
+            DCURR = XDOTVN(6,AG,AG)
             IF (modef.eq.2) 
      *        DCURR = DCURR+VDIST(IV)*VDIST(IV)
             if (Modef.eq.2) THEN
@@ -332,7 +331,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      A           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
      B            .AND. ITDESG(I).GT.0)))) THEN
                DTEMP = DISTVN(6,GRED,TG)**2
-               DBEST = DOTVN(6,AG,AG)
+               DBEST = XDOTVN(6,AG,AG)
                IF (modef.eq.2) 
      *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
                IF (DTEMP.LT.DBEST) DBEST=DTEMP
@@ -486,9 +485,9 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
 C**********************************************************************C
       subroutine CalculateCenteredCell( NewCell, CenteredCell )
       real*8 NewCell(6), CenteredCell(6)
-            CenteredCell(1) = DSQRT( NewCell(1) );
-            CenteredCell(2) = DSQRT( NewCell(2) );
-            CenteredCell(3) = DSQRT( NewCell(3) );
+            CenteredCell(1) = DSQRT( NewCell(1) )
+            CenteredCell(2) = DSQRT( NewCell(2) )
+            CenteredCell(3) = DSQRT( NewCell(3) )
             CenteredCell(4) =
      *          DACOS(0.5*NewCell(4)/CenteredCell(2)/CenteredCell(3)) *
      *          180.0D0/DATAN(1.0D0)/4.0D0
@@ -974,22 +973,22 @@ C now loop thru all the vectors
 
          call rmv6( v(1,iv), basicBoundaries(1,16), vtemp )
          boundary678X = anorm(6,vtemp)
-         distances2Boundaries(16) = boundary678X;
+         distances2Boundaries(16) = boundary678X
          call rmv6( v(1,iv), basicBoundaries(1,17), vtemp )
          boundary9ABCDEX = anorm(6,vtemp)
-         distances2Boundaries(17) = boundary9ABCDEX;
+         distances2Boundaries(17) = boundary9ABCDEX
          call rmv6( v(1,iv), basicBoundaries(1,18), vtemp )
          boundaryFX = anorm(6,vtemp)
-         distances2Boundaries(18) = boundaryFX;
+         distances2Boundaries(18) = boundaryFX
          call rmv6( v(1,iv), basicBoundaries(1,19), vtemp )
          boundary67 = anorm(6,vtemp)
-         distances2Boundaries(19) = boundary67;
+         distances2Boundaries(19) = boundary67
          call rmv6( v(1,iv), basicBoundaries(1,20), vtemp )
          boundary9A = anorm(6,vtemp)
-         distances2Boundaries(20) = boundary9A;
+         distances2Boundaries(20) = boundary9A
          call rmv6( v(1,iv), basicBoundaries(1,21), vtemp )
          boundaryCD = anorm(6,vtemp)
-         distances2Boundaries(21) = boundaryCD;
+         distances2Boundaries(21) = boundaryCD
 
 
          do ip=1,15
@@ -1094,14 +1093,14 @@ C----------------------------------------------------------------------C
       END
 
 C**********************************************************************C
-      REAL*8 FUNCTION DOTVN (N,V1,V2)
+      REAL*8 FUNCTION XDOTVN (N,V1,V2)
       implicit none
       real*8 V1(N),V2(N)
       integer i,n
 C----------------------------------------------------------------------C
-      DOTVN = 0.0
+      XDOTVN = 0.0
       DO 1000 I=1,N
-         DOTVN = DOTVN + V1(I)*V2(I)
+         XDOTVN = XDOTVN + V1(I)*V2(I)
  1000 CONTINUE
       END
 
