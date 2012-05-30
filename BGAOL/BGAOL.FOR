@@ -177,6 +177,7 @@ C**********************************************************************C
       real*8 ZEROS(6)
       real*8 NCDIST
       LOGICAL INPCEL
+      LOGICAL EMBDIST, COMBMODE, NCBMODE, HTMLOUT
       CHARACTER*1 MODEC
       integer modef
       EXTERNAL INPCEL
@@ -224,6 +225,10 @@ C----------------------------------------------------------------------C
       iunit2 = 2
       iunit3 = 3
       iunit10 = 10
+      EMBDIST = .false.
+      COMBMODE = .false.
+      HTMLOUT = .false.
+      NCBMODE = .true.
       DEBUG = .true.
       DEBUGD = .false.
       call IUNTMN(6,IUM)
@@ -234,7 +239,8 @@ C----------------------------------------------------------------------C
 
   100 continue
 
-      IF ( .NOT. INPCEL(LATSYM,MODEC,TITLE,CV,CE)) THEN
+      IF ( .NOT. INPCEL(LATSYM,MODEC,TITLE,CV,CE,
+     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT)) THEN
          GO TO 9000
       ELSEIF ( LATSYM .eq. "Q" ) THEN
          GO TO 9000
@@ -281,10 +287,12 @@ C----------------------------------------------------------------------C
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
 
          do modef = 1,2
-         IF ((MODEC.EQ." ".OR.MODEC.EQ.'I').AND. modef.eq.1) THEN
+         IF ((MODEC.EQ." ".OR.MODEC.EQ.'I').AND. 
+     *     COMBMODE .AND. modef.eq.1) THEN
          WRITE(*,*) "UNCONSTRAINED ITERATIVE MODE SEARCH"
          CALL MKREFL (RATIO,MXTREE,TREE,NVMAX,V,NV,GRED,'MKREFL')
-         ELSEIF ((MODEC.EQ." ".OR.MODEC.EQ.'B').AND. modef.eq.2)
+         ELSEIF ((MODEC.EQ." ".OR.MODEC.EQ.'B').AND.
+     *     NCBMODE .AND. modef.eq.2)
      *     THEN
          WRITE(*,*) "NIGGLI CONE BOUNDARY-CONSTRAINED SEARCH"
          CALL MKGAOL (MXTREE,TREE,NVMAX,V,NV,GRED,GE,RATIO,
@@ -335,6 +343,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                IF (modef.eq.2) 
      *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
                IF (DTEMP.LT.DBEST) DBEST=DTEMP
+               IF (EMBDIST) THEN
                CALL REDUCE (TG,TGMRED,TGRED,0.D0,'REDUCE')
                IF (ABS(NCDIST(GRED,TGRED)-sqrt(dbest))
      *           .gt.1.d-8.and.modef.eq.2) THEN
@@ -344,6 +353,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *             NCDIST(GRED,TGRED), sqrt(dbest),
      *             -NCDIST(GRED,TGRED)+sqrt(dbest)
                  write(*,*)
+               ENDIF
                ENDIF
                CALL CPYVN(6,TG,VBEST)
                CALL CPYVN(6,AG,AVBEST)
@@ -368,6 +378,10 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                if (NEARREDUCED(I)) sprefix = "NEAR"
                if (REDUCED(I)) sprefix = "    "
                BEST(I) = DSQRT(DBEST)
+               IF (HTMLOUT) THEN
+                 WRITE(*,'(a,I3,a)') "<a name=IT_",
+     *             IABS(ITDESG(I))+100*modef,"></a>"
+               ENDIF
                WRITE (*,*)
                IF (ITDESG(I).GT.0) THEN
                WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
@@ -452,6 +466,10 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
            sprefix = " NON"
            if (NEARREDUCED(IORD(I))) sprefix = "NEAR"
            if (REDUCED(IORD(I))) sprefix = "    "
+           if (HTMLOUT) THEN
+             write(*,'(a,I3,a)')"<a href=#IT_",
+     *       IABS(ITDESG(IORD(i)))+100*modef,">"
+           endif
            if (ITDESG(IORD(I)).GT.0) then
            WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A4,
      2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
@@ -464,6 +482,9 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      3        IABS(ITDESG(IORD(I))), sprefix,
      4        CHRLAT(IORD(I)), BEST(IORD(I)),
      5        (CenteredCell(JJ,IORD(I)),JJ=1,6)
+           endif
+           if (HTMLOUT) THEN
+             write(*,*)"</a>"
            endif
            bandcount = bandcount+1
          ENDIF
@@ -1285,27 +1306,74 @@ C     input lattice type was "V", expect that it's a vector
  2000 CONTINUE
       END
 
+
+C
+C     INPCEL
+C
+C     Inputs the parameters for a run
+C     The first line has
+C         LATSYM  the lattice symbol as the first character
+C         MODEC   a blank, I, B or - was the second character
+C         TITLE   100 characters of title as chars 3-102
+C                 LATSYM "X" or "Q" cause an immediate exit
+C     The second line is
+C         CV      The input cell (a, b, c, alpha, beta, gamma)
+C                 if the lattice symbol is not V
+C                 or the g6 vector for lattice symbol V
+C     The third line is
+C         CE      The errors in the input cell
+C     If MODEC is '-' then the following logical variables are input
+C         EMBDIST -- report embedding distance
+C         COMBMODE -- do combinatorial mode search 
+C                    (implied by MODEC I)
+C         NCBMODE  -- do Niggli cone boundary search (implied by
+C                     MODEC B)
+C         HTMLOUT  -- use HTML markup
+C      The defaults are
+C         EMBDIST .false.
+C         COMBMODE .false.
+C         NCBMODE  .true.
+C         HTMLOUT  .false.
+C
+C
 C**********************************************************************C
-      LOGICAL FUNCTION INPCEL (LATSYM,MODEC,TITLE,CV,CE)
+      LOGICAL FUNCTION INPCEL (LATSYM,MODEC,TITLE,CV,CE,
+     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT)
       implicit none
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       EXTERNAL OKCELL
-      LOGICAL OKCELL
+      LOGICAL OKCELL, EMBDIST, COMBMODE, NCBMODE, HTMLOUT
       CHARACTER *1 LATSYM
-      CHARACTER *1 MODEC
+      CHARACTER *1 MODEC, YN
       CHARACTER *100 TITLE
       CHARACTER *102 INPUTLINE
       real*8 CV(6),CE(6)
 C----------------------------------------------------------------------C
 
       INPCEL = .true.
+      EMBDIST = .false.
+      COMBMODE = .false.
+      NCBMODE = .true.
+      HTMLOUT = .false.
  1000 CONTINUE
       WRITE (*,*) ' Input Xtal Class '
-      READ (*,"(A100)", END=9000, ERR=9000 ) INPUTLINE
+      READ (*,"(A102)", END=9000, ERR=9000 ) INPUTLINE
       LATSYM = INPUTLINE(1:1)
       MODEC = INPUTLINE(2:2)
       TITLE = INPUTLINE(3:102)
+
+      if (MODEC.eq.'I' .or. MODEC.eq.'i') THEN
+        MODEC = 'I'
+        COMBMODE = .true.
+        NCBMODE = .false.
+      ENDIF
+
+      if (MODEC.eq.'B' .or. MODEC.eq.'b') THEN
+        MODEC = 'B'
+        COMBMODE = .false.
+        NCBMODE = .true.
+      ENDIF
 
       IF (ICHAR(LATSYM) .GE. ICHAR('a')
      2 .AND. ICHAR(LATSYM) .LE. ICHAR('z'))
@@ -1318,6 +1386,30 @@ C----------------------------------------------------------------------C
 
       WRITE (*,*) ' Input Standard Deviations of Cell Parameters'
       READ (*,*, END=9000) CE
+
+      if (MODEC.ne.'I' .and. MODEC.ne.'i'
+     *   .and. MODEC.ne.'B' .and. MODEC.ne.'b' .and. MODEC.ne.' ') THEN
+        WRITE (*,*) ' Print embedding distances (Y/N)'
+        READ (*,'(A1)',END=2000) YN
+        EMBDIST = .false.
+        IF (YN.EQ.'y'.or.YN.eq.'Y') EMBDIST = .true.
+        WRITE (*,*) ' Combinatorial Search (Y/N)'
+        READ (*,'(A1)',END=2000) YN
+        COMBMODE = .false.
+        IF (YN.EQ.'y'.or.YN.eq.'Y') COMBMODE = .true.
+        WRITE (*,*) ' Niggli Cone Boundary Search (Y/N)'
+        READ (*,'(A1)',END=2000) YN
+        NCBMODE = .false.
+        IF (YN.EQ.'y'.or.YN.eq.'Y') NCBMODE = .true.
+        WRITE (*,*) ' HTML output (Y/N)'
+        READ (*,'(A1)',END=2000) YN
+        HTMLOUT = .false.
+        IF (YN.EQ.'y'.or.YN.eq.'Y') HTMLOUT = .true.
+ 2000   MODEC = ' '
+        IF (COMBMODE .and. .NOT. NCBMODE) MODEC = 'I'
+        IF (.NOT. COMBMODE ) MODEC = 'B'
+      ENDIF
+
       RETURN
  9000 CONTINUE
       INPCEL = .FALSE.
