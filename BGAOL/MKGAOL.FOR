@@ -500,7 +500,7 @@ C     *   SEEDS(3,i), SEEDS(4,i), SEEDS(5,i), SEEDS(6,i)
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,SEEDS(1,i),V(1,NV))
-            IVB(NV) = i
+            IVB(NV) = 1
             VDIST(NV) = SEEDDIST(i)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
 C            write(*,*)"NV, SEED DIST",NV,VDIST(NV)
@@ -526,7 +526,7 @@ C           call printg6('Reject SEED ',SEEDS(1,i))
       enddo
 
       DO I = 1,6
-        NEWGE(I) = DMIN
+        NEWGE(I) = max(GE(I),DMIN)
       enddo
 
 C
@@ -539,6 +539,11 @@ C     increase.
          WRITE (*,*) ' NV IN MKREFL ',NV
          return
       ENDIF
+      if (ivb(nexamined).gt.9) go to 1000
+
+      DO I = 1,6
+        NEWGE(I) = max(GE(I)/(2.D0**IVB(nexamined)),DMIN)
+      ENDDO
 
 C     Generate seed points on each of the 15 boundaries      
 
@@ -563,7 +568,7 @@ C
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,SEEDS(1,i),V(1,NV))
-            IVB(NV) = i
+            IVB(NV) = IVB(nexamined)+1
             VDIST(NV) = dsqrt(SEEDDIST(i)**2+
      *        VDIST(nexamined)**2)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
@@ -578,7 +583,7 @@ C            call printg6('Store SEED ',SEEDS(1,i))
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,VT,V(1,NV))
-            IVB(NV) = i
+            IVB(NV) = IVB(nexamined)+1
             VDIST(NV) = dsqrt(SEEDDIST(i)**2+
      *        VDIST(nexamined)**2)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
