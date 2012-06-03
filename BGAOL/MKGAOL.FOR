@@ -514,7 +514,7 @@ C            call printg6('Store SEED ',SEEDS(1,i))
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,VT,V(1,NV))
-            IVB(NV) = i
+            IVB(NV) = 1
             VDIST(NV) = SEEDDIST(i)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
 C            write(*,*)"NV, M*SEED DIST",NV,VDIST(NV)
