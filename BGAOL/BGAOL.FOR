@@ -177,7 +177,7 @@ C**********************************************************************C
       real*8 ZEROS(6)
       real*8 NCDIST
       LOGICAL INPCEL
-      LOGICAL EMBDIST, COMBMODE, NCBMODE, HTMLOUT
+      LOGICAL EMBDIST, COMBMODE, NCBMODE, HTMLOUT, QUITFLG
       CHARACTER*1 MODEC
       CHARACTER*19 HTMLSTR
       CHARACTER*4 HTMLEND
@@ -232,6 +232,7 @@ C----------------------------------------------------------------------C
       COMBMODE = .false.
       HTMLOUT = .false.
       NCBMODE = .true.
+      QUITFLG = .false.
       DEBUG = .true.
       DEBUGD = .false.
       call IUNTMN(6,IUM)
@@ -242,8 +243,9 @@ C----------------------------------------------------------------------C
 
   100 continue
 
+      IF (QUITFLG) go to 9000
       IF ( .NOT. INPCEL(LATSYM,MODEC,TITLE,CV,CE,
-     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT)) THEN
+     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT, QUITFLG)) THEN
          GO TO 9000
       ELSEIF ( LATSYM .eq. "Q" ) THEN
          GO TO 9000
@@ -1353,13 +1355,15 @@ C                 if the lattice symbol is not V
 C                 or the g6 vector for lattice symbol V
 C     The third line is
 C         CE      The errors in the input cell
-C     If MODEC is '-' then the following logical variables are input
+C     If MODEC is '-' or '.' then the following logical variables are input
 C         EMBDIST -- report embedding distance
 C         COMBMODE -- do combinatorial mode search 
 C                    (implied by MODEC I)
 C         NCBMODE  -- do Niggli cone boundary search (implied by
 C                     MODEC B)
 C         HTMLOUT  -- use HTML markup
+C     IF MODEC is '.' then the following logical variable is set
+C         QUITFLG  -- quit after this pass
 C      The defaults are
 C         EMBDIST .false.
 C         COMBMODE .false.
@@ -1369,12 +1373,12 @@ C
 C
 C**********************************************************************C
       LOGICAL FUNCTION INPCEL (LATSYM,MODEC,TITLE,CV,CE,
-     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT)
+     *  EMBDIST, COMBMODE, NCBMODE, HTMLOUT, QUITFLG)
       implicit none
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       EXTERNAL OKCELL
-      LOGICAL OKCELL, EMBDIST, COMBMODE, NCBMODE, HTMLOUT
+      LOGICAL OKCELL, EMBDIST, COMBMODE, NCBMODE, HTMLOUT, QUITFLG
       CHARACTER *1 LATSYM
       CHARACTER *1 MODEC, YN
       CHARACTER *100 TITLE
@@ -1387,6 +1391,7 @@ C----------------------------------------------------------------------C
       COMBMODE = .false.
       NCBMODE = .true.
       HTMLOUT = .false.
+      QUITFLG = .true.
  1000 CONTINUE
       WRITE (*,*) ' Input Xtal Class '
       READ (*,"(A102)", END=9000, ERR=9000 ) INPUTLINE
@@ -1420,6 +1425,7 @@ C----------------------------------------------------------------------C
 
       if (MODEC.ne.'I' .and. MODEC.ne.'i'
      *   .and. MODEC.ne.'B' .and. MODEC.ne.'b' .and. MODEC.ne.' ') THEN
+        IF (MODEC.eq.'.') QUITFLG = .true.
         WRITE (*,*) ' Print embedding distances (Y/N)'
         READ (*,'(A1)',END=2000) YN
         EMBDIST = .false.
