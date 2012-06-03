@@ -306,6 +306,10 @@ C----------------------------------------------------------------------C
            GO TO 6000
          ENDIF
 
+         IF (HTMLOUT) WRITE(*,*),"</pre>",
+     *   '<div style="width:800px;height:200px;overflow:scroll;">',
+     *   "<pre>"
+
          DO 4000 I=1,NPROJ
             BEST(I) = -19191
             REDUCED(I) = .false.
@@ -438,6 +442,8 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
          ENDIF
 
  4000    CONTINUE
+
+         IF (HTMLOUT) WRITE(*,*),"</pre></div><pre>"
 
       call SortDists(NPROJ, BEST, IORD, ERRSIZ)
       if (modef.eq.1)
