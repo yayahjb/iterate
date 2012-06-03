@@ -1391,7 +1391,7 @@ C----------------------------------------------------------------------C
       COMBMODE = .false.
       NCBMODE = .true.
       HTMLOUT = .false.
-      QUITFLG = .true.
+      QUITFLG = .false.
  1000 CONTINUE
       WRITE (*,*) ' Input Xtal Class '
       READ (*,"(A102)", END=9000, ERR=9000 ) INPUTLINE
