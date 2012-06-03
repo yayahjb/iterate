@@ -279,7 +279,7 @@ C**********************************************************************C
       real*8 dmin, grmin
       real*8 XDOTVN
       integer IVB(NVMAX)
-      integer i, icycle, irefl, nv1, id
+      integer i, icycle, irefl, nv1, nexamined, id, jj
       integer irefl2
       integer nearst
       INTEGER MS(36,15)
@@ -288,6 +288,7 @@ C**********************************************************************C
       real*8 NEWSEEDS(6,15,15)
       real*8 SEEDDIST(15),NEWSEEDDIST(15,15)
       LOGICAL GOODSEED(15),NEWGOODSEED(15,15)
+      LOGICAL NEARRED
 
       real*8 prj(36,21), prjperp(36,21)
       common /projectors/ prj,prjperp
@@ -476,12 +477,23 @@ C     the nearby neighbors on the boundary
 C      write(*,*) "calling bldtre"
       CALL BLDTRE (MXTREE,GRED,NV*16,TREE,'BLDTRE')
       CALL CPYVN(6,GRED,V(1,NV))
+      nexamined = NV
       IVB(NV) = 0
       VDIST(NV) = 0.D0
 C      write(*,*)"SEED DIST",NV,SEEDDIST(NV)
 C      call printg6('Storing ',GRED)
+C
+C     Add the good seeds that are not duplicates to
+C     the tree, and for each one apply the matrix
+C     for that boundary and if the image is nearly
+C     reduced, add that as well.
+C
       do i = 1,15
         if (GOODSEED(i)) then
+C        write(*,'(a,Z2,6f9.2)')
+C     *   "I, SEEDS(I) =",I, SEEDS(1,i),SEEDS(2,i),
+C     *   SEEDS(3,i), SEEDS(4,i), SEEDS(5,i), SEEDS(6,i)
+
           NV1 = NV + 1
           IF (NEARST(MXTREE,SEEDS(1,i),DMIN,TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
@@ -490,111 +502,95 @@ C      call printg6('Storing ',GRED)
             CALL CPYVN(6,SEEDS(1,i),V(1,NV))
             IVB(NV) = i
             VDIST(NV) = SEEDDIST(i)
-C            write(*,*)"SEED DIST",NV,SEEDDIST(NV)
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, SEED DIST",NV,VDIST(NV)
 C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
-        else
+          call imv6(SEEDS(1,i),MS(1,i),vt)
+          NV1 = NV+1
+          if (NEARRED(vt,1.0D-6,'NEARRED') .AND.
+     *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
+     *      'NEARST') .EQ. 0) THEN
+            NV = NV+1
+            CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
+            CALL CPYVN(6,VT,V(1,NV))
+            IVB(NV) = i
+            VDIST(NV) = SEEDDIST(i)
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, M*SEED DIST",NV,VDIST(NV)
+C            call printg6('Store M*SEED ',VT)
+          ENDIF
+C        else
 C           call printg6('Reject SEED ',SEEDS(1,i))
         endif
       enddo
-      
-C     For each good seed point, we apply the
-C     matching matrix, yielding a possible new
-C     seed point on a different boundary.  Those
-C     become the new seed points.
-C
-C     In each case it is important to keep the original
-C     seed distances to original cell and to keep with
-C     each derived cell the index of the original
-C     seed for that cell, because the final distance
-C     from the original cell to the projection of the
-C     derived cell into a lattice character is no larger than
-C     hypoteneuse of the triangle.  The needed index is
-C     held in the bottom 4 bits of the tree entry ID.
-C
-      DO i = 1,15
-        ISEED(i) = i
-      ENDDO
-      DO ICYCLE=1,MXSWTC+1
-      DO IREFL=1,15
-C
-C        PROJECT GE ONTO THE BOUNDARY
-C
-         call rmv6( GE, PRJ(1,IREFL), NEWGE )
-         DO i = 1,6
-           NEWGE(i) = MAX(ABS(NEWGE(i)),DMIN)
-         ENDDO
-         DO i = 1,15
-           DO IREFL2 = 1,15
-             NEWGOODSEED(IREFL2,IREFL) = .false.
-           ENDDO
-         ENDDO
-C         write(*,*)"icycle, irefl", icycle, irefl
-         IF (GOODSEED(IREFL)) THEN
-C
-C          If the seed is good, apply the matrix
-C          for that boundary and map the boundaries
-C          on which the image of the seed lands
-C
-           call imv6(SEEDS(1,IREFL),MS(1,IREFL),vt)
-C           write(*,*)"IREFL, SEEDS, MS, VT"
-C           write(*,*) IREFL, (SEEDS(jj,IREFL),jj=1,6)
-C           write(*,*) "MS",(MS(jj,IREFL),jj=1,36)
-C           write(*,*) VT
-           call GENSEEDS(vt,NEWGE,NEWSEEDS(1,1,IREFL),
-     *       NEWSEEDDIST(1,IREFL), NEWGOODSEED(1,IREFL), 
-     *       PRJ, PRJPERP)
-           DO IREFL2 = 1,15
-             IF (NEWGOODSEED(IREFL2,IREFL)) THEN
-               IF (NEWSEEDS(1,IREFL2,IREFL)**2
-     *            + NEWSEEDS(2,IREFL2,IREFL)**2
-     *            + NEWSEEDS(3,IREFL2,IREFL)**2 
-     *            .lt. 10.0*grmin) THEN
-                 NV1 = NV + 1
-                 IF(NEARST(MXTREE,NEWSEEDS(1,IREFL2,IREFL),
-     2             DMIN,TREE,NV1,ID,'NEARST') .EQ. 0)
-     3             THEN
-                     NV = NV + 1
 
-C                     write(*,*)"storing ",
-C     *               (NEWSEEDS(jj,IREFL2,IREFL),jj=1,6)
-C                     call printg6('Store SEED ',
-C     *                 NEWSEEDS(1,IREFL2,IREFL))
-                     CALL BLDTRE (MXTREE,
-     2                 NEWSEEDS(1,IREFL2,IREFL),
-     3                 NV*16+IREFL,TREE,'BLDTRE')
-                       CALL CPYVN(6,NEWSEEDS(1,IREFL2,IREFL),
-     2                   V(1,NV))
-                       IVB(NV) = ISEED(IREFL)
-                       VDIST(NV) = SQRT(SEEDDIST(IVB(NV))**2
-     *                   + NEWSEEDDIST(IREFL2,IREFL)**2)
-C                       write(*,*)"SEED DIST",NV,VDIST(NV)
-                 ELSE
-C                     NEWGOODSEED(IREFL2,IREFL) = .false.
-                 ENDIF
-               ELSE
-                   NEWGOODSEED(IREFL2,IREFL) = .false.
-               ENDIF
-             ELSE
-                 NEWGOODSEED(IREFL2,IREFL) = .false.
-             ENDIF
-           ENDDO
-         ENDIF
-      ENDDO
-      DO IREFL = 1,15
-         GOODSEED(IREFL) = .false.
-         DO IREFL2 = 1,15
-           IF (NEWGOODSEED(IREFL2,IREFL)) then
-             CALL CPYVN(6,NEWSEEDS(1,IREFL2,IREFL),SEEDS(1,IREFL))
-             ISEED(IREFL) = IREFL2
-             SEEDDIST(IREFL) = SQRT(SEEDDIST(IREFL)**2
-     *         + NEWSEEDDIST(IREFL2,IREFL)**2)
-           ENDIF
-         ENDDO
-      ENDDO
-      ENDDO
-      WRITE (*,*) ' NV IN MKREFL ',NV
-      END
+      DO I = 1,6
+        NEWGE(I) = DMIN
+      enddo
+
+C
+C     Now we have seeds to examine from nexamined+1
+C     through NV.  In the course of doing so, NV may
+C     increase.
+
+1000  nexamined = nexamined+1
+      if (nexamined .gt. NV) THEN
+         WRITE (*,*) ' NV IN MKREFL ',NV
+         return
+      ENDIF
+
+C     Generate seed points on each of the 15 boundaries      
+
+      call GENSEEDS(V(1,nexamined),NEWGE,SEEDS,SEEDDIST,
+     * GOODSEED, PRJ, PRJPERP)
+C
+C     Add the good seeds that are not duplicates to
+C     the tree, and for each one apply the matrix
+C     for that boundary and if the image is nearly
+C     reduced, add that as well.
+C
+C     Differs from the prior loop only in the distance
+C     calculation
+C
+      do i = 1,15
+        if (GOODSEED(i) .and.
+     *    SEEDS(1,i)**2 + SEEDS(2,i)**2 + SEEDS(3,i)**2
+     *    .lt. 10.0D0*grmin) then
+          NV1 = NV + 1
+          IF (NEARST(MXTREE,SEEDS(1,i),DMIN,TREE,NV1,ID,
+     *      'NEARST') .EQ. 0) THEN
+            NV = NV + 1
+            CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
+            CALL CPYVN(6,SEEDS(1,i),V(1,NV))
+            IVB(NV) = i
+            VDIST(NV) = dsqrt(SEEDDIST(i)**2+
+     *        VDIST(nexamined)**2)
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, SEED DIST",NV,VDIST(NV)
+C            call printg6('Store SEED ',SEEDS(1,i))
+          ENDIF
+          call imv6(SEEDS(1,i),MS(1,i),vt)
+          NV1 = NV+1
+          if (NEARRED(vt,1.0D-6,'NEARRED') .AND.
+     *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
+     *      'NEARST') .EQ. 0) THEN
+            NV = NV+1
+            CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
+            CALL CPYVN(6,VT,V(1,NV))
+            IVB(NV) = i
+            VDIST(NV) = dsqrt(SEEDDIST(i)**2+
+     *        VDIST(nexamined)**2)
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, M*SEED DIST",NV,VDIST(NV)
+C            call printg6('Store M*SEED ',VT)
+          ENDIF
+C        else
+C           call printg6('Reject SEED ',SEEDS(1,i))
+        endif
+      enddo
+      go to 1000
+      end
       
       SUBROUTINE MKPERP( PRJ, PRJPERP)
       implicit none
@@ -639,6 +635,7 @@ C
       real*8 PRJ(36,21),PRJPERP(36,21)
       real*8 SEEDS(6,15), SEEDDIST(15)
       logical GOODSEED(15)
+      character*20 SEEDLAB
       real*8 vtemp(6)
       real*8 boundary67
       real*8 boundary9A
@@ -718,10 +715,15 @@ C       3.5 times the errorbox
 
         SEEDDIST(ip) = a
         GOODSEED(ip) = NEARRED(SEEDS(1,ip),1.0D-6,'NEARRED')
+        if (.NOT.GOODSEED(ip)) then
+C         call printg6("Non-reduced projection",seeds(1,ip))
+C         return
+        endif
         do i = 1,6
           if (abs(GVEC(i)-SEEDS(i,ip)) .gt.
      *      3.5D0*GE(i)) GOODSEED(ip) = .false.
         enddo
+C        write(seedlab,'(''BDRY'', I2)')IP
 C        call printg6(seedlab,seeds(1,ip))
       enddo
       

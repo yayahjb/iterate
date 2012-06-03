@@ -179,6 +179,9 @@ C**********************************************************************C
       LOGICAL INPCEL
       LOGICAL EMBDIST, COMBMODE, NCBMODE, HTMLOUT
       CHARACTER*1 MODEC
+      CHARACTER*19 HTMLSTR
+      CHARACTER*4 HTMLEND
+      INTEGER LHTMLSTR, LHTMLEND
       integer modef
       EXTERNAL INPCEL
       CHARACTER LATSYM
@@ -378,20 +381,23 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                if (NEARREDUCED(I)) sprefix = "NEAR"
                if (REDUCED(I)) sprefix = "    "
                BEST(I) = DSQRT(DBEST)
+               HTMLSTR = " "
+               LHTMLSTR = 1
                IF (HTMLOUT) THEN
-                 WRITE(*,'(a,I3,a)') "<a name=IT_",
+                 WRITE(HTMLSTR,'(a,I3,a)') "<a name=IT_",
      *             IABS(ITDESG(I))+100*modef,"></a>"
+               LHTMLSTR = 19
                ENDIF
                WRITE (*,*)
                IF (ITDESG(I).GT.0) THEN
-               WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
+               WRITE (*,'(a,I3,2X,''IT('',I2'')'',
      2            4H +++,1X,A4,A,2X,A2,2X,A100)')
-     3            I,IABS(ITDESG(I)),
+     3            HTMLSTR(1:LHTMLSTR),I,IABS(ITDESG(I)),
      4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ELSE
-               WRITE (*,'(1X,I3,2X,''IT('',I2'')'',
+               WRITE (*,'(a,I3,2X,''IT('',I2'')'',
      2            4H ---,1X,A4,A,2X,A2,2X,A100)')
-     3            I,IABS(ITDESG(I)),
+     3            HTMLSTR(1:LHTMLSTR),I,IABS(ITDESG(I)),
      4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ENDIF
                WRITE (*,'(6X,F5.1,1X,F5.2,3H V=,6F8.1)')
@@ -440,7 +446,11 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
 
       write (*,*) "Final List              Lat     Dist    Cell"
       DO iv = 1,3
-      WRITE(*, "(1X,A)")"-----------------------------"
+      IF (HTMLOUT) THEN
+        WRITE(*,*) "<hr />"
+      ELSE
+        WRITE(*, "(1X,A)")"-----------------------------"
+      ENDIF
       if (iv.eq.1) write(*,*)"NIGGLI REDUCED"
       if (iv.eq.2) write(*,*)"NEAR NIGGLI REDUCED"
       if (iv.eq.3) write(*,*)"NON NIGGLI REDUCED"
@@ -456,7 +466,11 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *           .and.iv.eq.3)))THEN
            IF ( BEST(IORD(I)) .gt. band) THEN
            IF (bandcount .gt. 0) THEN
-                     WRITE(*, "(1X,A)")"-----------------------------"
+             IF (HTMLOUT) THEN
+               WRITE(*,*) "<hr />"
+             ELSE
+               WRITE(*, "(1X,A)")"-----------------------------"
+             ENDIF
            ENDIF
            band = ERRSIZ/2.D0
      *       *dble(INT(2.0*BEST(IORD(I))/ERRSIZ)+1)
@@ -466,32 +480,41 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
            sprefix = " NON"
            if (NEARREDUCED(IORD(I))) sprefix = "NEAR"
            if (REDUCED(IORD(I))) sprefix = "    "
+           HTMLSTR = " "
+           LHTMLSTR = 1
+           HTMLEND = " "
+           LHTMLEND = 1
            if (HTMLOUT) THEN
-             write(*,'(a,I3,a)')"<a href=#IT_",
+             write(HTMLSTR,'(a,I3,a)')"<a href=#IT_",
      *       IABS(ITDESG(IORD(i)))+100*modef,">"
+             LHTMLSTR = 16
+             HTMLEND = "</a>"
+             LHTMLEND = 4
            endif
            if (ITDESG(IORD(I)).GT.0) then
-           WRITE(*, "(4H IT(, I3, 2H) ,4H +++,1X,A4,
-     2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
-     3        IABS(ITDESG(IORD(I))), sprefix,
-     4        CHRLAT(IORD(I)), BEST(IORD(I)),
-     5        (CenteredCell(JJ,IORD(I)),JJ=1,6)
+           WRITE(*, "(a,3HIT(, I3, 1H),a,4H +++,1X,A4,
+     *        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
+     *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
+     *        HTMLEND(1:LHTMLEND), sprefix,
+     *        CHRLAT(IORD(I)), BEST(IORD(I)),
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6)
            else
-           WRITE(*, "(4H IT(, I3, 2H) ,4H ---,1X,A4,
-     2        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
-     3        IABS(ITDESG(IORD(I))), sprefix,
-     4        CHRLAT(IORD(I)), BEST(IORD(I)),
-     5        (CenteredCell(JJ,IORD(I)),JJ=1,6)
-           endif
-           if (HTMLOUT) THEN
-             write(*,*)"</a>"
+           WRITE(*, "(a,3HIT(, I3, 1H),a,4H ---,1X,A4,
+     *        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
+     *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
+     *        HTMLEND(1:LHTMLEND), sprefix,
+     *        CHRLAT(IORD(I)), BEST(IORD(I)),
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6)
            endif
            bandcount = bandcount+1
          ENDIF
  5000 CONTINUE
       enddo
-      WRITE(*, "(1X,A)")"-----------------------------"
-
+      IF (HTMLOUT) THEN
+        WRITE(*,*) "<hr />"
+      ELSE
+        WRITE(*, "(1X,A)")"-----------------------------"
+      ENDIF
 
  6000 CONTINUE
       enddo
@@ -1257,13 +1280,21 @@ C     input lattice type was "V", expect that it's a vector
 
       IF (CV(4).GT.175.0D0 .OR. CV(5).GT.175.0D0
      2              .OR. CV(6).GT.175.0D0) THEN
-         WRITE (*,*) ' THE LATTICE ANGLES MUST BE LESS THAN 175 DEGREES'
-         OKCELL = .FALSE.
+         WRITE (*,*) 
+     *   ' SOME LATTICE ANGLES ARE GREATER THAN 175.0 DEGREES'
+         WRITE (*,*) ' THIS IS PROBABLY INCORRECT'
+         IF (CV(4).GT.179.9D0 .OR. CV(5).GT.179.9D0
+     *     .OR. CV(6).GT.179.9D0)
+     *     OKCELL = .FALSE.
       ENDIF
 
       IF (CV(4).LT.5.0D0 .OR. CV(5).LT.5.0D0 .OR. CV(6).LT.5.0D0) THEN
-         WRITE (*,*) ' THE LATTICE ANGLES MUST EXCEED 5.0 DEGREES'
-         OKCELL = .FALSE.
+         WRITE (*,*) 
+     *   ' SOME LATTICE ANGLES ARE LESS THAN 5.0 DEGREES'
+         WRITE (*,*) ' THIS IS PROBABLY INCORRECT'
+         IF (CV(4).LT.1.0D-1 .OR. CV(5).LT.1.0D-1 
+     *    .OR. CV(6).LT.1.0D-1)
+     *     OKCELL = .FALSE.
       ENDIF
 
       DO 1000 I=1,NLATT
@@ -1293,9 +1324,9 @@ C     input lattice type was "V", expect that it's a vector
       ENDIF
 
       IF (CV(4)+CV(5)+CV(6) .GT. 355.0D0) THEN
-         WRITE (*,*) ' THE SUM OF THE CELL ANGLES MUST BE LESS THAN'
-         WRITE (*,*) ' 355.0 DEGREES'
-         OKCELL = .FALSE.
+         WRITE (*,*) ' THE SUM OF THE ANGLES EXCEEDS 355 DEGREES '
+         WRITE (*,*) ' THIS IS PROBABLY INCORRECT'
+         IF (CV(4)+CV(5)+CV(6) .GT. 360.0D0-1.D-4) OKCELL = .FALSE.
       ENDIF
 
       DO 2000 I=1,3
