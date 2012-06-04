@@ -276,8 +276,8 @@ C**********************************************************************C
       real*8 VDIST(NVMAX)
       real*8 NEWGE(6)
       real*8 VT(6)
-      real*8 dmin, grmin
-      real*8 XDOTVN
+      real*8 dmin, gerr, grmin
+      real*8 XDOTVN, NCDIST
       integer IVB(NVMAX)
       integer i, icycle, irefl, nv1, nexamined, id, jj
       integer irefl2
@@ -467,7 +467,8 @@ C     Generate seed points on each of the 15 boundaries
       enddo
 
       NV = 0
-      DMIN = 0.1*DSQRT(XDOTVN(6,GRED,GRED))*RATIO
+      gerr = DSQRT(XDOTVN(6,GRED,GRED))*RATIO
+      DMIN = max(0.05,0.05*DSQRT(XDOTVN(6,GRED,GRED))*RATIO)
       grmin = gred(1)**2+gred(2)**2+gred(3)**2
       WRITE (*,*) ' DMIN IN MKGOAL ',DMIN
       
@@ -508,7 +509,8 @@ C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
           call imv6(SEEDS(1,i),MS(1,i),vt)
           NV1 = NV+1
-          if (NEARRED(vt,1.0D-6,'NEARRED') .AND.
+          if (NCDIST(vt,GRED).LT.gerr .and.
+     *       NEARRED(vt,1.0D-6,'NEARRED') .AND.
      *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
@@ -535,14 +537,14 @@ C     through NV.  In the course of doing so, NV may
 C     increase.
 
 1000  nexamined = nexamined+1
-      if (nexamined .gt. NV) THEN
+      if (nexamined .gt. NV .OR. NV.GT.NVMAX-31) THEN
          WRITE (*,*) ' NV IN MKREFL ',NV
          return
       ENDIF
-      if (ivb(nexamined).gt.9) go to 1000
+      if (ivb(nexamined).gt.12) go to 1000
 
       DO I = 1,6
-        NEWGE(I) = max(GE(I)/(2.D0**IVB(nexamined)),DMIN)
+        NEWGE(I) = max(GE(I)/(1.2D0**IVB(nexamined)),DMIN)
       ENDDO
 
 C     Generate seed points on each of the 15 boundaries      
@@ -577,7 +579,8 @@ C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
           call imv6(SEEDS(1,i),MS(1,i),vt)
           NV1 = NV+1
-          if (NEARRED(vt,1.0D-6,'NEARRED') .AND.
+          if (NCDIST(vt,GRED).LT.gerr .and.
+     *       NEARRED(vt,1.0D-6,'NEARRED') .AND.
      *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
