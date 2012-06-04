@@ -1338,8 +1338,8 @@ C     input lattice type was "V", expect that it's a vector
       ENDIF
 
       DO 2000 I=1,3
-         IF (CV(I) .LT. 1.0D0) THEN
-            WRITE (*,*) ' THE AXIAL LENGTHS MUST EXCEED 1.0)'
+         IF (CV(I) .LT. 1.0D-4) THEN
+            WRITE (*,*) ' THE AXIAL LENGTHS MUST EXCEED 1.0D-4)'
             OKCELL = .FALSE.
          ENDIF
  2000 CONTINUE
