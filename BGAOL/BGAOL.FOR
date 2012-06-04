@@ -272,7 +272,7 @@ C----------------------------------------------------------------------C
 
          CALL CHKVEC(GOUT)
          CALL IUNTMN(6,MRED)
-         CALL REDUCE (GOUT,MRED,GRED,1.0D-3,'REDUCE')
+         CALL REDUCE (GOUT,MRED,GRED,0.D0,'REDUCE')
          CALL CHKVEC(GRED)
          CALL G6TOC (GRED,CRED,'G6TOC ')
          SIZE = DSQRT(XDOTVN(6,GRED,GRED))
@@ -322,7 +322,7 @@ C----------------------------------------------------------------------C
                AP(J) = 1.0D0 + AP(J)
  2000       CONTINUE
             DO 3000  IV=1,NV
-              AMRED = NEARRED(V(1,IV),0.0D0,"NEARRED")
+              AMRED = NEARRED(V(1,IV),1.0D-6,"NEARRED")
               AMNEARRED = NEARRED(V(1,IV),
      *        MIN(.5D0,ERRSIZ/2.D0),"NEARRED")
             if (AMRED) AMNEARRED = .true.
@@ -353,7 +353,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
                IF (DTEMP.LT.DBEST) DBEST=DTEMP
                IF (EMBDIST) THEN
-               CALL REDUCE (TG,TGMRED,TGRED,1.0D-3,'REDUCE')
+               CALL REDUCE (TG,TGMRED,TGRED,0.D0,'REDUCE')
                IF (ABS(NCDIST(GRED,TGRED)-sqrt(dbest))
      *           .gt.1.d-8.and.modef.eq.2) THEN
                  write(*,'(a,6f10.3)') "GRED  ",GRED
