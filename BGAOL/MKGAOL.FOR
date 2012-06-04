@@ -468,7 +468,7 @@ C     Generate seed points on each of the 15 boundaries
 
       NV = 0
       gerr = DSQRT(XDOTVN(6,GRED,GRED))*RATIO
-      DMIN = max(0.05,0.05*DSQRT(XDOTVN(6,GRED,GRED))*RATIO)
+      DMIN = min(0.05,0.1*DSQRT(XDOTVN(6,GRED,GRED))*RATIO)
       grmin = gred(1)**2+gred(2)**2+gred(3)**2
       WRITE (*,*) ' DMIN IN MKGOAL ',DMIN
       
@@ -541,10 +541,10 @@ C     increase.
          WRITE (*,*) ' NV IN MKREFL ',NV
          return
       ENDIF
-      if (ivb(nexamined).gt.12) go to 1000
+      if (ivb(nexamined).gt.10) go to 1000
 
       DO I = 1,6
-        NEWGE(I) = max(GE(I)/(1.2D0**IVB(nexamined)),DMIN)
+        NEWGE(I) = max(GE(I)/(1.414D0**IVB(nexamined)),DMIN)
       ENDDO
 
 C     Generate seed points on each of the 15 boundaries      
