@@ -1004,11 +1004,26 @@ C
         folded = .true.
 C        print *,"folding on 2"
 
+      ENDIF
+C
+C     fold 3,4,5 boundaries around g4,5,6 = 0 to all ---
+C
+      if ((ABS(FGVEC(4)).LE.DELTA .OR.
+     *  ABS(FGVEC(5)).LE.DELTA .OR.
+     *  ABS(FGVEC(6)).LE.DELTA ) .AND.
+     *  (FGVEC(4) .GT. 0.D0 .OR.
+     *  FGVEC(5) .GT. 0.D0 .OR.
+     *  FGVEC(6) .GT. 0.D0 )) THEN
+
+        FGVEC(4) = -ABS(FGVEC(4))
+        FGVEC(5) = -ABS(FGVEC(5))
+        FGVEC(6) = -ABS(FGVEC(6))
+        folded = .true.
 
       ENDIF
 
       folds = folds+1
-      if (folded.and.folds.LT.5) go to 100
+      if (folded.and.folds.LT.6) go to 100
 
       END
 
