@@ -279,15 +279,12 @@ C**********************************************************************C
       real*8 dmin, gerr, grmin
       real*8 XDOTVN, NCDIST
       integer IVB(NVMAX)
-      integer i, icycle, irefl, nv1, nexamined, id, jj
-      integer irefl2
+      integer i, nv1, nexamined, id, jj
       integer nearst
       INTEGER MS(36,15)
-      INTEGER ISEED(15)
       real*8 SEEDS(6,15)
-      real*8 NEWSEEDS(6,15,15)
-      real*8 SEEDDIST(15),NEWSEEDDIST(15,15)
-      LOGICAL GOODSEED(15),NEWGOODSEED(15,15)
+      real*8 SEEDDIST(15)
+      LOGICAL GOODSEED(15)
       LOGICAL NEARRED
 
       real*8 prj(36,21), prjperp(36,21)
@@ -677,11 +674,18 @@ C     *  ip,(PRJ(i,ip),i=1,36)
 C        write(*,'(A,i2/,6(6F9.3/))'),"PRJPERP",
 C     *  ip,(PRJPERP(i,ip),i=1,36)
         a = anorm(6,vtemp)
-        if ((GVEC(4)*GVEC(5)*GVEC(6) .le. 0.D0
+        if (((GVEC(4)-1.d-6*sqrt(GVEC(2)*GVEC(3)))*
+     *     (GVEC(5)-1.d-6*sqrt(GVEC(1)*GVEC(3)))*
+     *     (GVEC(6)-1.d-6*sqrt(GVEC(1)*GVEC(3)))
+     *     .le. 0.D0
      *        .and. (ip .eq. 6 .or. ip .eq. 7
      *          .or. ip .eq. 9 .or. ip .eq. 10
      *          .or. ip .eq. 12.or. ip .eq. 13))
-     *        .or. (GVEC(4)*GVEC(5)*GVEC(6) .gt. 0.D0
+     *        .or. (
+     *     (GVEC(4)-1.d-6*sqrt(GVEC(2)*GVEC(3)))*
+     *     (GVEC(5)-1.d-6*sqrt(GVEC(1)*GVEC(3)))*
+     *     (GVEC(6)-1.d-6*sqrt(GVEC(1)*GVEC(3)))
+     *     .gt. 0.D0
      *        .and. (ip .eq. 8 .or. ip .eq. 11
      *          .or. ip .eq. 14. or. ip .eq. 15))) then
             if ( ip .eq. 6 .or. ip .eq. 7 .or. ip .eq. 8 ) then
@@ -810,15 +814,27 @@ C        write(*,*) "ind ", ind
         valid1(ind) = .false.
         valid2(ind) = .false.
         if (isneg(ind)) then
-          if (gv1(4)*gv1(5)*gv1(6).le.1.e-6) 
+          if ((gv1(4)-1.d-6*sqrt(gv1(2)*gv1(3)))*
+     *       (gv1(5)-1.d-6*sqrt(gv1(1)*gv1(3)))*
+     *       (gv1(6)-1.d-6*sqrt(gv1(1)*gv1(2)))
+     *       .le. 0.D0)
      *      valid1(ind) = .true.
-          if (gv2(4)*gv2(5)*gv2(6).le.1.e-6)
+          if ((gv2(4)-1.d-6*sqrt(gv2(2)*gv2(3)))*
+     *       (gv2(5)-1.d-6*sqrt(gv2(1)*gv2(3)))*
+     *       (gv2(6)-1.d-6*sqrt(gv2(1)*gv2(2)))
+     *       .le. 0.D0)
      *      valid2(ind) = .true.
         endif
         if (ispos(ind)) then
-          if (gv1(4)*gv1(5)*gv1(6).gt.1.e-6)
+          if ((gv1(4)-1.d-6*sqrt(gv1(2)*gv1(3)))*
+     *       (gv1(5)-1.d-6*sqrt(gv1(1)*gv1(3)))*
+     *       (gv1(6)-1.d-6*sqrt(gv1(1)*gv1(2)))
+     *       .gt. 0.D0)
      *      valid1(ind) = .true.
-          if (gv2(4)*gv2(5)*gv2(6).gt.1.e-6)
+          if ((gv2(4)-1.d-6*sqrt(gv2(2)*gv2(3)))*
+     *       (gv2(5)-1.d-6*sqrt(gv2(1)*gv2(3)))*
+     *       (gv2(6)-1.d-6*sqrt(gv2(1)*gv2(2)))
+     *       .gt. 0.D0)
      *      valid2(ind) = .true.
         endif
         if (valid2(ind)) then
@@ -1023,7 +1039,7 @@ C
       ENDIF
 
       folds = folds+1
-      if (folded.and.folds.LT.6) go to 100
+      if (folded.and.folds.LT.9) go to 100
 
       END
 

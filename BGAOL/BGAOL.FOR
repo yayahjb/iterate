@@ -252,13 +252,38 @@ C----------------------------------------------------------------------C
       ELSE
 
          CALL CTOG6(CV,CE,G,GE,SIZE,ERRSIZ,RATIO,'CTOG6 ')
+         if(htmlout) then
+          write (*,"(a,$)") 
+     *      "</pre><table border=2><tr><td valign=top><pre>"
+          write (*,"(a,$)") 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+         endif
          WRITE(*,*) " Input lattice type ", LATSYM
+         if(htmlout) then
+          write (*,*) ' <a href="#results">GO TO RESULTS</a>'
+          write (*,"(a,$)") "</span></pre></td><td valign=top><pre>"
+          write (*,"(a,$)") 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+         endif
          WRITE (*,'('' INPUT CELL AND ERRORS '')')
          CALL WRCELL(CV,CE,'WRCELL')
-         WRITE (*,*)
+         if(htmlout) then
+          write (*,"(a,$)") "</span></pre></td><td valign=top><pre>"
+          write (*,"(a,$)") 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+         else
+          write (*,*)
+         endif
          WRITE (*,*) ' INPUT VECTOR AND ERRORS'
          CALL WRVEC6(G,GE,'WRVEC6')
-         WRITE (*,*)
+         if(htmlout) then
+          write (*,"(a,$)") 
+     *  "</span></pre></td></tr><tr><td valign=top colspan=3><pre>"
+          write (*,"(a,$)") 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+         else
+          write (*,*)
+         endif
          CALL WRSIZE (SIZE,ERRSIZ,RATIO,'WRSIZE')
          CALL MKPRIM (LATSYM,G,MPRIM,GOUT,'MKPRIM')
          WRITE (*,*) ' AFTER MKPRIM'
@@ -267,8 +292,25 @@ C----------------------------------------------------------------------C
            WRITE (*,*) "g6 Centering Matrix:"
            WRITE (*,'(12x,6f10.3)') MPRIM
          ENDIF
+         if(htmlout) then
+          write (*,"(a,$)") 
+     *  "</span></pre></td></tr><tr><td valign=top colspan=3><pre>"
+          write (*,*) 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+         else
+          write (*,*)
+         endif
          WRITE (*,*) "E3 Centering Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
+         if(htmlout) then
+          write (*,"(a,$)") 
+     *  "</span></pre></td></tr><tr><td valign=top colspan=3><pre>"
+          write (*,"(a,$)") 
+     *     '<span class="inner-pre" style="font-size: 11px">'
+
+         else
+          write (*,*)
+         endif
 
          CALL CHKVEC(GOUT)
          CALL IUNTMN(6,MRED)
@@ -278,9 +320,11 @@ C----------------------------------------------------------------------C
          SIZE = DSQRT(XDOTVN(6,GRED,GRED))
 
          ERRSIZ = RATIO * SIZE
+         if (.not.htmlout) then
          WRITE (*,*)
          WRITE (*,*) TITLE
          WRITE (*,'('' REDUCED CELL  '')')
+         endif
          WRITE (*,'('' Red. Cell   '',6F11.4)')CRED
          WRITE (*,'('' Red. Vector '',6F10.5)') GRED
          if (DEBUGD) THEN
@@ -290,6 +334,10 @@ C----------------------------------------------------------------------C
          CALL g6toe3(MRED,M3RED)
          WRITE (*,*) "E3 Reduction Matrix:"
          WRITE (*,'(12x,3f10.3)') ((M3RED(I,J),i=1,3),j=1,3)
+         if(htmlout) then
+          write (*,*) 
+     *      "</pre></td></tr><tr></table><pre>"
+         endif
 
          do modef = 1,2
          IF ((MODEC.EQ." ".OR.MODEC.EQ.'I').AND. 
@@ -445,7 +493,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
 
  4000    CONTINUE
 
-         IF (HTMLOUT) WRITE(*,*),"</pre></div><pre>"
+         IF (HTMLOUT) WRITE(*,*),"<a name=results></pre></div><pre>"
 
       call SortDists(NPROJ, BEST, IORD, ERRSIZ)
       if (modef.eq.1)
@@ -1401,7 +1449,7 @@ C----------------------------------------------------------------------C
       HTMLOUT = .false.
       QUITFLG = .false.
  1000 CONTINUE
-      WRITE (*,*) ' Input Xtal Class '
+      WRITE (*,"(a,$)") ' Centering: '
       READ (*,"(A102)", END=9000, ERR=9000 ) INPUTLINE
       LATSYM = INPUTLINE(1:1)
       MODEC = INPUTLINE(2:2)
@@ -1423,31 +1471,38 @@ C----------------------------------------------------------------------C
      2 .AND. ICHAR(LATSYM) .LE. ICHAR('z'))
      2 LATSYM = CHAR(ICHAR(LATSYM)-ICHAR('a')+ICHAR('A'))
       IF (LATSYM .EQ. 'X' .OR. LATSYM.EQ.'Q') GO TO 9000
-      WRITE (*,*) ' Input Cell Parameters'
+      WRITE (*,*) LATSYM
+      WRITE (*,"(a,$)") ' Cell Parameters: '
       READ (*,*, END=9000) CV
       INPCEL = OKCELL(LATSYM,CV)
       IF (.NOT. INPCEL) GO TO 1000
+      WRITE (*,*) CV
 
-      WRITE (*,*) ' Input Standard Deviations of Cell Parameters'
+      WRITE (*,"(a,$)") ' Standard Deviations of Cell Parameters: '
       READ (*,*, END=9000) CE
+      WRITE (*,*) CE
 
       if (MODEC.ne.'I' .and. MODEC.ne.'i'
      *   .and. MODEC.ne.'B' .and. MODEC.ne.'b' .and. MODEC.ne.' ') THEN
         IF (MODEC.eq.'.') QUITFLG = .true.
-        WRITE (*,*) ' Print embedding distances (Y/N)'
+        WRITE (*,"(a,$)") ' Print embedding distances (Y/N): '
         READ (*,'(A1)',END=2000) YN
+        WRITE (*,*) YN
         EMBDIST = .false.
         IF (YN.EQ.'y'.or.YN.eq.'Y') EMBDIST = .true.
-        WRITE (*,*) ' Combinatorial Search (Y/N)'
+        WRITE (*,"(a,$)") ' Combinatorial Search (Y/N): '
         READ (*,'(A1)',END=2000) YN
+        WRITE (*,*) YN
         COMBMODE = .false.
         IF (YN.EQ.'y'.or.YN.eq.'Y') COMBMODE = .true.
-        WRITE (*,*) ' Niggli Cone Boundary Search (Y/N)'
+        WRITE (*,"(a,$)") ' Niggli Cone Boundary Search (Y/N): '
         READ (*,'(A1)',END=2000) YN
+        WRITE (*,*) YN
         NCBMODE = .false.
         IF (YN.EQ.'y'.or.YN.eq.'Y') NCBMODE = .true.
-        WRITE (*,*) ' HTML output (Y/N)'
+        WRITE (*,"(a,$)") ' HTML output (Y/N): '
         READ (*,'(A1)',END=2000) YN
+        WRITE (*,*) YN
         HTMLOUT = .false.
         IF (YN.EQ.'y'.or.YN.eq.'Y') HTMLOUT = .true.
  2000   MODEC = ' '
@@ -2009,8 +2064,6 @@ C
 
       real*8 GVEC(6)
       real*8 DELTA
-      real*8 ZEROS(6)
-      DATA ZEROS /6*0.0/
 C----------------------------------------------------------------------C
 
       IF (TEST .NE. 'NEARRED') THEN
@@ -2761,7 +2814,6 @@ C**********************************************************************C
       integer function FillPrjList( eightfoldProjectors )
       implicit none
       real*8 eightfoldProjectors(36,*)
-      character*8 level8
       real*8 prj(36,21)
       integer i, ip
 
@@ -2961,7 +3013,6 @@ C     DATA boundaryCD /
      *  0, 0, 0, .5, .5,  0,
      * .5, 0, 0,  0,  0, .5 /
 
-      data level8 /"12679ACD"/
 
 
       do 1000 ip=1,21
