@@ -393,14 +393,19 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      5        .AND. (TG(1).GT.1.0D0 .AND. TG(2).GT.1.0D0
      6        .AND. TG(3).GT.1.0D0
      7        .AND. (
-     8           (TG(4)*TG(5)*TG(6) .LE. 1.E-4
+     *          ((TG(4).le.1.d-6*sqrt(TG(2)*TG(3)))
+     *          .and.(TG(5).le.1.d-6*sqrt(TG(1)*TG(3)))
+     *          .and.(TG(6).le.1.d-6*sqrt(TG(1)*TG(2)))
      9            .AND. ITDESG(I).LT.0)
-     A           .OR. (TG(4)*TG(5)*TG(6) .GE. -1.E-4
+     A           .OR.
+     *           ((TG(4).ge.-1.d-6*sqrt(TG(2)*TG(3)))
+     *          .and.(TG(5).ge.-1.d-6*sqrt(TG(1)*TG(3)))
+     *          .and.(TG(6).ge.-1.d-6*sqrt(TG(1)*TG(2)))
      B            .AND. ITDESG(I).GT.0)))) THEN
                DTEMP = DISTVN(6,GRED,TG)**2
                DBEST = XDOTVN(6,AG,AG)
                IF (modef.eq.2) 
-     *           DBEST = DBEST+VDIST(IV)*VDIST(IV)
+     *           DBEST = NCDIST(GRED,TG)**2
                IF (DTEMP.LT.DBEST) DBEST=DTEMP
                IF (EMBDIST) THEN
                CALL REDUCE (TG,TGMRED,TGRED,0.D0,'REDUCE')
@@ -2130,11 +2135,146 @@ C
 C
 C     TEST THE F BOUDARY FOLD
 C
-      IF (GVEC(4)+GVEC(5)+GVEC(6)+GVEC(1)+GVEC(2)
-     *  .EQ. 0.D0 .AND.
+      IF (abs(GVEC(4)+GVEC(5)+GVEC(6)+GVEC(1)+GVEC(2))
+     *  .LE. DELTA .AND.
      * 2.D0*(GVEC(1)+GVEC(5))+GVEC(6).GT.0D0) RETURN
 
       NEARRED = .true.
+
+      END
+
+C**********************************************************************C
+      LOGICAL FUNCTION NEAR2RED (GVEC,DELTA,VOUT,
+     *  DIST,TEST)
+C
+C     RETURNS .true. IF GVEC IS NEARLY NIGGLI REDUCED
+C     ALLOWING A NON_REDUCTION ERROR OF DELTA.  
+C     A VECTOR VOUT IS PRODUCED WHICH IS REDUCED, IF
+C     POSSIBLE.  NO MATRIX IS KEPT.  DIST IS THE DISTANCE
+C     FROM GVEC TO VOUT.
+C
+C     IF DELTA .EQ. 0.D0, THE TESTS ARE ON REDUCTION
+C     RATHER THAN NEAR REDUCTION
+C
+C     ALL CASES OF BEING ON THE WRONG SIDES OF THE
+C     FOLDING BOUNDARIES ARE ACCEPTED AS NEAR
+C     REDUCED
+C
+      implicit none
+      CHARACTER*8 TEST
+
+      real*8 GVEC(6), VOUT(6)
+      real*8 DELTA, DIST, XDELTA
+      integer ii
+      real*8 S456
+      real*8 NCDIST
+C----------------------------------------------------------------------C
+
+      IF (TEST .NE. 'NEAR2RED') THEN
+         WRITE (*,*) ' TEST WAS WRONG IN NEAR2RED'
+         STOP
+      ENDIF
+      
+      NEAR2RED = .true.
+      XDELTA = DELTA*1.D-6
+
+      DO ii = 1,6
+        VOUT(ii) = GVEC(ii)
+      ENDDO
+C
+C     TEST FOR G1, G2, G3 OUT OF BOUNDS OR WRONG ORDER
+C
+      IF (GVEC(1) .LT. -XDELTA
+     *  .OR. GVEC(2) .LT. -XDELTA
+     *  .OR. GVEC(2) .LT. -XDELTA
+     *  .OR. GVEC(1) .GT. GVEC(2)+XDELTA
+     *  .OR. GVEC(2) .GT. GVEC(3)+XDELTA) THEN
+         if (GVEC(1).LT.0.D0) VOUT(1) = 0.D0
+         if (GVEC(2).LT.0.D0) VOUT(2) = 0.D0
+         if (GVEC(3).LT.0.D0) VOUT(3) = 0.D0
+         IF (VOUT(3).GT.MAX(VOUT(1),VOUT(2))) THEN
+           IF (VOUT(2) .LT. VOUT(1)) THEN
+             VOUT(2) = (VOUT(1)+VOUT(2))/2.D0
+             VOUT(1) = VOUT(2)
+           ENDIF
+         ELSE IF(VOUT(1).LT.MIN(VOUT(2),VOUT(3)))
+     *      THEN
+           IF (VOUT(3) .LT. VOUT(2)) THEN
+             VOUT(3) = (VOUT(2)+VOUT(3))/2.D0
+             VOUT(2) = VOUT(3)
+           ENDIF
+         ELSE
+           VOUT(1) = (VOUT(1)+VOUT(2)+VOUT(3))/3.D0
+           VOUT(2) = VOUT(1)
+           VOUT(3) = VOUT(1)
+         ENDIF
+       ENDIF
+C
+C     TEST FOR NON-REDUCED SIGN COMBINATIONS IN
+C     G4, G5 AND G6
+C
+      S456 = 1.D0
+      IF (GVEC(4) .LE. XDELTA
+     *   .OR. GVEC(5) .LE. XDELTA
+     *   .OR. GVEC(6) .LE. XDELTA) THEN
+        S456 = -1.D0
+        if (GVEC(4) .GT. 0.D0) VOUT(4) = 0.D0
+        if (GVEC(5) .GT. 0.D0) VOUT(5) = 0.D0
+        if (GVEC(6) .GT. 0.D0) VOUT(6) = 0.D0
+      ENDIF
+C
+C     TEST ABS(G{4,5,6}) AGAINST G{1,2,3}
+C
+      IF (ABS(GVEC(4)) .GT. ABS(GVEC(2)) + XDELTA
+     *  .OR. ABS(GVEC(5)) .GT. ABS(GVEC(1)) + XDELTA
+     *  .OR. ABS(GVEC(6)) .GT. ABS(GVEC(1)) + XDELTA)
+     *  THEN
+        VOUT(4) = S456*(MIN(ABS(GVEC(2)),ABS(VOUT(4))))
+        VOUT(5) = S456*(MIN(ABS(GVEC(1)),ABS(VOUT(5))))
+        VOUT(6) = S456*(MIN(ABS(GVEC(1)),ABS(VOUT(6))))
+      ENDIF
+C
+C     TEST THE BODY DIAGONAL
+C
+      IF (GVEC(4)+GVEC(5)+GVEC(6)+
+     *  ABS(GVEC(1))+ABS(GVEC(2))+XDELTA
+     2  .LT. 0.0D0) then
+        VOUT(6) = -VOUT(1)-VOUT(2)-VOUT(4)-VOUT(5)
+      endif
+
+C     IF DELTA IS NON-ZERO, WE STOP HERE
+
+      IF (DELTA .GT. 0.0D0) GO TO 1000
+
+C
+C     TEST THE 678, 9AB, CDE BOUNDARY FOLDS
+C
+      IF ((GVEC(4).EQ.GVEC(2).AND.
+     *  2.D0*GVEC(5) .LT. GVEC(6)) .OR.
+     *  (GVEC(4) + GVEC(2) .EQ. 0.D0 .AND.
+     *  GVEC(6).LE.0.0D0) .OR.
+     *  (GVEC(5).eq.GVEC(1).AND.
+     *  2.D0*GVEC(4) .LT. GVEC(6)) .OR.
+     *  (GVEC(5)+ GVEC(1) .EQ. 0.D0 .AND.
+     *  GVEC(6).LE.0.0D0) .OR.
+     *  (GVEC(6).eq.GVEC(1).AND.
+     *  2.D0*GVEC(4) .LT. GVEC(5)) .OR.
+     *  (GVEC(6)+ GVEC(1) .EQ. 0.D0 .AND.
+     *  GVEC(5).LE.0.0D0)) near2red=.false.
+C
+C     TEST THE F BOUNDARY FOLD
+C
+      IF (abs(GVEC(4)+GVEC(5)+GVEC(6)+GVEC(1)+GVEC(2))
+     *  .LE. XDELTA .AND.
+     *  2.D0*(GVEC(1)+GVEC(5))+GVEC(6).GT.0D0) 
+     *  near2red=.false.
+
+1000  DIST = NCDIST(GVEC,VOUT)
+
+      if (DIST.GT.DELTA) near2red = .false.
+C      write(*,*)"NEAR2RED",delta,near2red,dist
+C      call printg6("GVEC",GVEC)
+C      call printg6("Vout",vout)
 
       END
 

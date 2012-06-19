@@ -275,17 +275,18 @@ C**********************************************************************C
       real*8 TREE(MXTREE), V(6,NVMAX), GRED(6), GE(6)
       real*8 VDIST(NVMAX)
       real*8 NEWGE(6)
-      real*8 VT(6)
+      real*8 VT(6),VTRED(6)
       real*8 dmin, gerr, grmin
       real*8 XDOTVN, NCDIST
       integer IVB(NVMAX)
-      integer i, nv1, nexamined, id, jj
+      integer i, nv1, nexamined, id, jj, ib
       integer nearst
       INTEGER MS(36,15)
       real*8 SEEDS(6,15)
       real*8 SEEDDIST(15)
       LOGICAL GOODSEED(15)
-      LOGICAL NEARRED
+      LOGICAL NEARRED,NEAR2RED,NRED
+      real*8 dred
 
       real*8 prj(36,21), prjperp(36,21)
       common /projectors/ prj,prjperp
@@ -506,18 +507,34 @@ C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
           call imv6(SEEDS(1,i),MS(1,i),vt)
           NV1 = NV+1
-          if (NCDIST(vt,GRED).LT.gerr .and.
-     *       NEARRED(vt,1.0D-6,'NEARRED') .AND.
+          NRED=NEARRED(vt,1.0D-6,'NEARRED')
+          if (NRED) THEN
+          VDIST(NV1) = NCDIST(vt,GRED)
+          if (VDIST(NV1).LT.gerr .and.
      *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,VT,V(1,NV))
             IVB(NV) = 1
-            VDIST(NV) = SEEDDIST(i)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
 C            write(*,*)"NV, M*SEED DIST",NV,VDIST(NV)
 C            call printg6('Store M*SEED ',VT)
+          ENDIF
+          ELSE
+          NRED=NEAR2RED(vt,gerr,vtred,dred,'NEAR2RED')
+          VDIST(NV1) = NCDIST(vtred,GRED)
+          if (VDIST(NV1).LT.gerr .and.
+     *       NEARST(MXTREE,vtred,DMIN,TREE,NV1,ID,
+     *      'NEARST') .EQ. 0) THEN
+            NV = NV+1
+            CALL BLDTRE (MXTREE,vtred,NV*16+i,TREE,'BLDTRE')
+            CALL CPYVN(6,vtred,V(1,NV))
+            IVB(NV) = 1
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, M*SEED ** DIST",NV,VDIST(NV)
+C            call printg6('Store M*SEED ** ',VT)
+          ENDIF
           ENDIF
 C        else
 C           call printg6('Reject SEED ',SEEDS(1,i))
@@ -527,7 +544,6 @@ C           call printg6('Reject SEED ',SEEDS(1,i))
       DO I = 1,6
         NEWGE(I) = max(GE(I),DMIN)
       enddo
-
 C
 C     Now we have seeds to examine from nexamined+1
 C     through NV.  In the course of doing so, NV may
@@ -543,6 +559,8 @@ C     increase.
       DO I = 1,6
         NEWGE(I) = max(GE(I)/(1.414D0**IVB(nexamined)),DMIN)
       ENDDO
+
+      gerr = DSQRT(XDOTVN(6,NEWGE,NEWGE))
 
 C     Generate seed points on each of the 15 boundaries      
 
@@ -562,7 +580,8 @@ C
      *    SEEDS(1,i)**2 + SEEDS(2,i)**2 + SEEDS(3,i)**2
      *    .lt. 10.0D0*grmin) then
           NV1 = NV + 1
-          IF (NEARST(MXTREE,SEEDS(1,i),DMIN,TREE,NV1,ID,
+          IF (NEARST(MXTREE,SEEDS(1,i),DMIN
+     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
@@ -571,24 +590,41 @@ C
             VDIST(NV) = dsqrt(SEEDDIST(i)**2+
      *        VDIST(nexamined)**2)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
-C            write(*,*)"NV, SEED DIST",NV,VDIST(NV)
+C            write(*,*)"NV, SEED DIST,IB",NV,VDIST(NV),IB
 C            call printg6('Store SEED ',SEEDS(1,i))
           ENDIF
           call imv6(SEEDS(1,i),MS(1,i),vt)
           NV1 = NV+1
-          if (NCDIST(vt,GRED).LT.gerr .and.
-     *       NEARRED(vt,1.0D-6,'NEARRED') .AND.
-     *       NEARST(MXTREE,VT,DMIN,TREE,NV1,ID,
+          NRED=NEARRED(vt,1.0D-6,'NEARRED')
+          if (NRED) THEN
+          VDIST(NV1) = NCDIST(vt,GRED)
+          if (VDIST(NV1).LT.gerr .and.
+     *       NEARST(MXTREE,VT,DMIN
+     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
             CALL CPYVN(6,VT,V(1,NV))
             IVB(NV) = IVB(nexamined)+1
-            VDIST(NV) = dsqrt(SEEDDIST(i)**2+
-     *        VDIST(nexamined)**2)
             if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
-C            write(*,*)"NV, M*SEED DIST",NV,VDIST(NV)
+C            write(*,*)"NV, M*SEED DIST,IB",NV,VDIST(NV),IB
 C            call printg6('Store M*SEED ',VT)
+          ENDIF
+          ELSE
+          NRED=NEAR2RED(vt,gerr,vtred,dred,'NEAR2RED')
+          VDIST(NV1) = NCDIST(vtred,GRED)
+          if (VDIST(NV1).LT.gerr .and.
+     *       NEARST(MXTREE,vtred,DMIN
+     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
+     *      'NEARST') .EQ. 0) THEN
+            NV = NV+1
+            CALL BLDTRE (MXTREE,vtred,NV*16+i,TREE,'BLDTRE')
+            CALL CPYVN(6,vtred,V(1,NV))
+            IVB(NV) = 1
+            if (VDIST(NV).LT.1.D-4) VDIST(NV) = 0.D0
+C            write(*,*)"NV, M*SEED ** DIST",NV,VDIST(NV)
+C            call printg6('Store M*SEED ** ',VT)
+          ENDIF
           ENDIF
 C        else
 C           call printg6('Reject SEED ',SEEDS(1,i))
@@ -618,8 +654,8 @@ C      WRITE(*,*) "PRJPERP",PRJPERP
       real*8 VECTOR(6),FVECTOR(6)
       WRITE(*,'(A,1x,6F9.2)')TEXT,VECTOR
 
-      CALL FOLDBED(VECTOR,FVECTOR,0.05D1)
-      WRITE(*,'(A,1x,6F9.2)')"FOLDED: ",FVECTOR
+C      CALL FOLDBED(VECTOR,FVECTOR,0.05D1)
+C      WRITE(*,'(A,1x,6F9.2)')"FOLDED: ",FVECTOR
       RETURN
       END
 
@@ -645,10 +681,10 @@ C
       real*8 boundary67
       real*8 boundary9A
       real*8 boundaryCD
-      real*8 a
+      real*8 a,dred
       integer i, ip
-      real*8 anorm
-      logical NEARRED
+      real*8 anorm, gerr
+      logical NEARRED,NEAR2RED
 C----------------------------------------------------------------------C
 
 C     Compute the seeds and the seed distances
@@ -656,6 +692,8 @@ C     Compute the seeds and the seed distances
 C      write(*,*) "GENSEEDS GVEC, GE"
 C      write(*,*) GVEC
 C      write(*,*) GE
+
+      gerr= anorm(6,GE)
 
       call rmv6( GVEC, PRJPERP(1,19), vtemp )
       boundary67 = anorm(6,vtemp)
@@ -728,6 +766,9 @@ C       3.5 times the errorbox
         SEEDDIST(ip) = a
         GOODSEED(ip) = NEARRED(SEEDS(1,ip),1.0D-6,'NEARRED')
         if (.NOT.GOODSEED(ip)) then
+          GOODSEED(ip) = NEAR2RED(SEEDS(1,ip),gerr,
+     *    vtemp,dred,'NEAR2RED')
+          call CPYVN(6,vtemp,SEEDS(1,ip))
 C         call printg6("Non-reduced projection",seeds(1,ip))
 C         return
         endif
@@ -826,14 +867,14 @@ C        write(*,*) "ind ", ind
      *      valid2(ind) = .true.
         endif
         if (ispos(ind)) then
-          if ((gv1(4)-1.d-6*sqrt(gv1(2)*gv1(3)))*
-     *       (gv1(5)-1.d-6*sqrt(gv1(1)*gv1(3)))*
-     *       (gv1(6)-1.d-6*sqrt(gv1(1)*gv1(2)))
+          if ((gv1(4)+1.d-6*sqrt(gv1(2)*gv1(3)))*
+     *       (gv1(5)+1.d-6*sqrt(gv1(1)*gv1(3)))*
+     *       (gv1(6)+1.d-6*sqrt(gv1(1)*gv1(2)))
      *       .gt. 0.D0)
      *      valid1(ind) = .true.
-          if ((gv2(4)-1.d-6*sqrt(gv2(2)*gv2(3)))*
-     *       (gv2(5)-1.d-6*sqrt(gv2(1)*gv2(3)))*
-     *       (gv2(6)-1.d-6*sqrt(gv2(1)*gv2(2)))
+          if ((gv2(4)+1.d-6*sqrt(gv2(2)*gv2(3)))*
+     *       (gv2(5)+1.d-6*sqrt(gv2(1)*gv2(3)))*
+     *       (gv2(6)+1.d-6*sqrt(gv2(1)*gv2(2)))
      *       .gt. 0.D0)
      *      valid2(ind) = .true.
         endif
@@ -842,7 +883,9 @@ C        write(*,*) "ind ", ind
           call vdifn(6,gv2,pgv2(1,ind),vtemp)
           vdist(ind,2) = anorm(6,vtemp)
           call foldbed(pgv2(1,ind),fpgv2(1,ind),1.0D0)
-          if (ind.eq.8 .or. ind.eq.11 .or. ind.eq.14) then
+          if (bindex(ind).eq.8 
+     *      .or. bindex(ind).eq.11
+     *      .or. bindex(ind).eq.14) then
             jnd = ind-2
             if (valid1(jnd)) then
             call vdifn(6,fpgv1(1,jnd),fpgv2(1,ind),vtemp)
@@ -869,7 +912,9 @@ C        write(*,*) "ind ", ind
             if (mirdist(h1,h2,db).lt.NCDIST) 
      *        NCDIST=mirdist(h1,h2,db)
           endif
-          if (ind.eq.8 .or. ind.eq.11 .or. ind.eq.14) then
+          if (bindex(ind).eq.8 
+     *      .or. bindex(ind).eq.11 
+     *      .or. bindex(ind).eq.14) then
             jnd = ind-2
             if (valid2(jnd)) then
             call vdifn(6,fpgv1(1,ind),fpgv2(1,jnd),vtemp)
@@ -916,8 +961,6 @@ C
 
  100  continue
       folded = .false.
-C      write(*,*)"folding",FGVEC
-C      print *,"folds ",folds
 
 C
 C     fold the 678 boundary along g4 around |g6|/2
@@ -930,7 +973,6 @@ C
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-C        print *,"folding on 678"
 
       ENDIF
 
@@ -946,7 +988,6 @@ C
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-C        print *,"folding on 9AB"
 
       ENDIF
 
@@ -961,7 +1002,6 @@ C
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-C        print *,"folding on CDE"
 
       ENDIF
 
@@ -982,7 +1022,6 @@ C
         FGVEC(4) = FGVEC(5)
         FGVEC(5) = temp
         folded = .true.
-C        print *,"folding on F"
       ENDIF
 
 C
@@ -995,12 +1034,10 @@ C
       if (ABS(FGVEC(2)-FGVEC(1)).LE.DELTA
      *  .AND. ABS(FGVEC(4)).LT.ABS(FGVEC(5))) THEN
         
-C        print *,"folding on 1", FGVEC(4), FGVEC(5)
         temp = FGVEC(4)
         FGVEC(4) = FGVEC(5)
         FGVEC(5) = temp
         folded = .true.
-C        print *,"folded on 1", FGVEC(4), FGVEC(5)
 
       ENDIF
 
@@ -1018,7 +1055,6 @@ C
         FGVEC(5) = FGVEC(6)
         FGVEC(6) = temp
         folded = .true.
-C        print *,"folding on 2"
 
       ENDIF
 C
