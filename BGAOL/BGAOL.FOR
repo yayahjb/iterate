@@ -193,7 +193,7 @@ C**********************************************************************C
 
       real*8 dbest, dcurr, dtemp
 
-      PARAMETER (NVMAX=100000)
+      PARAMETER (NVMAX=20000)
       PARAMETER (MXTREE=11*NVMAX)
       real*8 TREE(MXTREE)
       real*8 V(6,NVMAX), VDIST(NVMAX)
@@ -1039,6 +1039,7 @@ C**********************************************************************C
       subroutine BoundaryDistances( NV, V, distances2Boundaries,
      2             ERRSIZ, DEBUG )
       implicit none
+      integer NV
       real*8 V(6,NV)
       real*8 basicBoundaries(36,21)
       real*8 vtemp(6)
@@ -1051,7 +1052,7 @@ C**********************************************************************C
       real*8 boundaryFX
       real*8 a
       real*8 ERRSIZ
-      integer nv, i, ip, iv, n
+      integer i, ip, iv, n
       real*8 anorm
       logical DEBUG
       character*1 XCONE
@@ -1202,8 +1203,9 @@ C----------------------------------------------------------------------C
 C**********************************************************************C
       REAL*8 FUNCTION XDOTVN (N,V1,V2)
       implicit none
+      integer N
       real*8 V1(N),V2(N)
-      integer i,n
+      integer i
 C----------------------------------------------------------------------C
       XDOTVN = 0.0
       DO 1000 I=1,N
@@ -1215,8 +1217,9 @@ C----------------------------------------------------------------------C
 C**********************************************************************C
       REAL*8 FUNCTION DISTVN (N,V1,V2)
       implicit none
+      integer N
       real*8 V1(N),V2(N)
-      integer i,n
+      integer i
 C----------------------------------------------------------------------C
       DISTVN = 0.0
       DO 1000 I=1,N
@@ -1228,8 +1231,9 @@ C----------------------------------------------------------------------C
 C**********************************************************************C
       REAL*8 FUNCTION DISTVND (N,V1,V2,DELTA)
       implicit none
+      integer N
       real*8 V1(N),V2(N),DELTA
-      integer i,n
+      integer i
 C----------------------------------------------------------------------C
       DISTVND = DELTA*DELTA
       DO 1000 I=1,N
@@ -1533,7 +1537,9 @@ C**********************************************************************C
       integer i,j,i1,i2
       real*8 size, errsiz,ratio
       real*8 rad
-      parameter (RAD = DATAN2(0.0D0,-1.0D0) / 180.0D0)
+      real*8 DATAN2
+
+      RAD = DATAN2(0.0D0,-1.0D0) / 180.0D0
 C----------------------------------------------------------------------C
 
       IF (TEST .NE. 'CTOG6 ') THEN
@@ -2287,9 +2293,10 @@ C**********************************************************************C
       CHARACTER *6 TEST
       real*8 G(6),C(6)
       real*8 rad
-      parameter (rad=180.0D0/4.0D0/datan(1.0D0))
+      real*8 datan
       real*8 AC
       integer i
+      rad=180.0D0/4.0D0/datan(1.0D0)
 C----------------------------------------------------------------------C
       IF (TEST .NE. 'G6TOC ') THEN
          WRITE (*,*) ' TEST WAS WRONG IN G6TOC'
@@ -3416,8 +3423,9 @@ C----------------------------------------------------------------------C
 C**********************************************************************C
       subroutine unitmx(n,a)
       implicit none
+      integer n
       real*8 a(n,n)
-      integer i,j,n
+      integer i,j
 C----------------------------------------------------------------------C
       do 1000 i=1,n
       do 1000 j=1,n

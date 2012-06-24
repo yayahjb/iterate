@@ -581,7 +581,7 @@ C
      *    .lt. 10.0D0*grmin) then
           NV1 = NV + 1
           IF (NEARST(MXTREE,SEEDS(1,i),DMIN
-     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.85D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
@@ -600,7 +600,7 @@ C            call printg6('Store SEED ',SEEDS(1,i))
           VDIST(NV1) = NCDIST(vt,GRED)
           if (VDIST(NV1).LT.gerr .and.
      *       NEARST(MXTREE,VT,DMIN
-     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.85D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
@@ -615,7 +615,7 @@ C            call printg6('Store M*SEED ',VT)
           VDIST(NV1) = NCDIST(vtred,GRED)
           if (VDIST(NV1).LT.gerr .and.
      *       NEARST(MXTREE,vtred,DMIN
-     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.85D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,vtred,NV*16+i,TREE,'BLDTRE')
