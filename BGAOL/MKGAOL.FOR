@@ -581,7 +581,7 @@ C
      *    .lt. 10.0D0*grmin) then
           NV1 = NV + 1
           IF (NEARST(MXTREE,SEEDS(1,i),DMIN
-     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV + 1
             CALL BLDTRE (MXTREE,SEEDS(1,i),NV*16+i,TREE,'BLDTRE')
@@ -600,7 +600,7 @@ C            call printg6('Store SEED ',SEEDS(1,i))
           VDIST(NV1) = NCDIST(vt,GRED)
           if (VDIST(NV1).LT.gerr .and.
      *       NEARST(MXTREE,VT,DMIN
-     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,VT,NV*16+i,TREE,'BLDTRE')
@@ -615,7 +615,7 @@ C            call printg6('Store M*SEED ',VT)
           VDIST(NV1) = NCDIST(vtred,GRED)
           if (VDIST(NV1).LT.gerr .and.
      *       NEARST(MXTREE,vtred,DMIN
-     *       *(1.414D0**IVB(nexamined)),TREE,NV1,ID,
+     *       *(1.75D0**IVB(nexamined)),TREE,NV1,ID,
      *      'NEARST') .EQ. 0) THEN
             NV = NV+1
             CALL BLDTRE (MXTREE,vtred,NV*16+i,TREE,'BLDTRE')
@@ -663,7 +663,7 @@ C      WRITE(*,'(A,1x,6F9.2)')"FOLDED: ",FVECTOR
       SUBROUTINE GENSEEDS( GVEC, GE, SEEDS, SEEDDIST,
      * GOODSEED, PRJ, PRJPERP)
 C
-C     GENSEEDS TAKES AN ARBiTRARY G6 VECTOR AND PROJECTS
+C     GENSEEDS TAKES AN ARBITRARY G6 VECTOR AND PROJECTS
 C     IT ONTO EACH OF THE 15 BOUNDARIES.  EVEN IF THE
 C     ORIGINAL VECTOR WAS REDUCED THE PROJECTED VECTOR
 C     MAY FAIL TO BE REDUCED, AND MAY EVEN FAIL TO BE
@@ -770,7 +770,7 @@ C       3.5 times the errorbox
      *    vtemp,dred,'NEAR2RED')
           call CPYVN(6,vtemp,SEEDS(1,ip))
 C         call printg6("Non-reduced projection",seeds(1,ip))
-C         return
+
         endif
         do i = 1,6
           if (abs(GVEC(i)-SEEDS(i,ip)) .gt.
@@ -815,6 +815,27 @@ C       1, 2, 678, 9AB, CDE, F
       END
 
 
+
+C     Compute the best distance between 2 G6 vectors
+C     allowing for cell-preserving sign changes in
+C     g4,5,6
+C
+      real*8 function g456dist(v1,v2)
+      real*8 v1(6),v2(6),anorm,vtemp(6)
+      real*8 xdotvn
+
+      call vdifn(6,v1,v2,vtemp)
+      if (xdotvn(3,v1(4),v2(4)).le.0.D0) then
+        g456dist = sqrt(xdotvn(6,vtemp,vtemp)
+     *    + 4.D0*min(
+     *         v1(5)*v2(5)+v1(6)*v2(6),
+     *         v1(4)*v2(4)+v1(6)*v2(6),
+     *         v1(4)*v2(4)+v1(5)*v2(5)))
+      else
+        g456dist = anorm(6,vtemp)
+      endif
+      end
+
 C
 C     Compute the distance reflecting from a boundary
 C
@@ -833,10 +854,9 @@ C
       implicit none
       real*8 gv1(6), gv2(6), pgv1(6,9), pgv2(6,9)
       real*8 fpgv1(6,9), fpgv2(6,9)
-      real*8 anorm, vtemp(6)
       real*8 prj(36,21), prjperp(36,21)
       integer ind, jnd, ip, bindex(9)
-      real*8 vdist(9,3),h1,h2,db, mirdist
+      real*8 vdist(9,3),h1,h2,db, mirdist, g456dist
       logical valid1(9),valid2(9),isneg(9),ispos(9)
       common /projectors/ prj,prjperp
       data bindex/1,2,6,8,9,11,12,14,15/
@@ -847,8 +867,7 @@ C
 
 C      write(*,*) "gv1 ",gv1
 C      write(*,*) "gv2 ",gv2
-      call vdifn(6,gv1,gv2,vtemp)
-      NCDIST = anorm(6,vtemp)
+      NCDIST = g456dist(gv1,gv2)
       do ind=1,9
 C        write(*,*) "ind ", ind
         ip = bindex(ind)
@@ -880,16 +899,14 @@ C        write(*,*) "ind ", ind
         endif
         if (valid2(ind)) then
           call rmv6(gv2,PRJ(1,ip),pgv2(1,ind))
-          call vdifn(6,gv2,pgv2(1,ind),vtemp)
-          vdist(ind,2) = anorm(6,vtemp)
+          vdist(ind,2) = g456dist(gv2,pgv2(1,ind))
           call foldbed(pgv2(1,ind),fpgv2(1,ind),1.0D0)
           if (bindex(ind).eq.8 
      *      .or. bindex(ind).eq.11
      *      .or. bindex(ind).eq.14) then
             jnd = ind-2
             if (valid1(jnd)) then
-            call vdifn(6,fpgv1(1,jnd),fpgv2(1,ind),vtemp)
-            vdist(ind,3) = anorm(6,vtemp)**2
+            vdist(ind,3) = g456dist(fpgv1(1,jnd),fpgv2(1,ind))
             h1 = vdist(jnd,1)
             h2 = vdist(ind,2)
             db = vdist(ind,3)
@@ -900,12 +917,10 @@ C        write(*,*) "ind ", ind
         endif
         if (valid1(ind)) then
           call rmv6(gv1,PRJ(1,ip),pgv1(1,ind))
-          call vdifn(6,gv1,pgv1(1,ind),vtemp)
-          vdist(ind,1) = anorm(6,vtemp)
+          vdist(ind,1) = g456dist(gv1,pgv1(1,ind))
           call foldbed(pgv1(1,ind),fpgv1(1,ind),1.0D0)
           if (valid2(ind)) then
-            call vdifn(6,fpgv1(1,ind),fpgv2(1,ind),vtemp)
-            vdist(ind,3) = anorm(6,vtemp)**2
+            vdist(ind,3) = g456dist(fpgv1(1,ind),fpgv2(1,ind))
             h1 = vdist(ind,1)
             h2 = vdist(ind,2)
             db = vdist(ind,3)
@@ -917,8 +932,7 @@ C        write(*,*) "ind ", ind
      *      .or. bindex(ind).eq.14) then
             jnd = ind-2
             if (valid2(jnd)) then
-            call vdifn(6,fpgv1(1,ind),fpgv2(1,jnd),vtemp)
-            vdist(ind,3) = anorm(6,vtemp)**2
+            vdist(ind,3) = g456dist(fpgv1(1,ind),fpgv2(1,jnd))
             h1 = vdist(ind,1)
             h2 = vdist(jnd,2)
             db = vdist(ind,3)
@@ -929,6 +943,7 @@ C        write(*,*) "ind ", ind
         endif
       enddo
       end
+
 
 
 
@@ -944,13 +959,13 @@ C
 C
       SUBROUTINE FOLDBED(GVEC,FGVEC,DELTA)
       implicit none
-      real*8 GVEC(6), FGVEC(6), DELTA 
+      real*8 GVEC(6), FGVEC(6), DELTA
       real*8 sqrt2, sqrt5, temp
 
       integer i
       logical folded
       integer folds
-      
+
       do i = 1,6
       FGVEC(i) = GVEC(i)
       enddo
@@ -958,6 +973,8 @@ C
       sqrt2 = sqrt(2.D0)
       sqrt5 = sqrt(5.D0)
       folds = 0
+
+C      call printg6("FOLDBED",GVEC)
 
  100  continue
       folded = .false.
@@ -967,13 +984,15 @@ C     fold the 678 boundary along g4 around |g6|/2
 C
       if ((FGVEC(2) - ABS(FGVEC(4))).LE.sqrt2*DELTA
      *  .AND. 2.D0*FGVEC(5).GT.ABS(FGVEC(6))) THEN
+        FGVEC(3) = FGVEC(2)+FGVEC(3)-ABS(FGVEC(4))
+        FGVEC(4) = 2.D0*FGVEC(2)-ABS(FGVEC(4))
         FGVEC(5) = MIN(FGVEC(5),ABS(FGVEC(6))-FGVEC(5))
         IF(FGVEC(5).LE.0.D0) THEN
           FGVEC(4) = -ABS(FGVEC(4))
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-
+C        call printg6("FOLD 678",FGVEC)
       ENDIF
 
 
@@ -982,13 +1001,15 @@ C     fold the 9AB boundary along g4 around |g6|/2
 C
       if ((FGVEC(1) - ABS(FGVEC(5))).LE.sqrt2*DELTA
      *  .AND. 2.D0*FGVEC(4).GT.ABS(FGVEC(6))) THEN
+        FGVEC(3) = FGVEC(1)+FGVEC(3)-ABS(FGVEC(5))
+        FGVEC(5) = 2.D0*FGVEC(1)-ABS(FGVEC(5))
         FGVEC(4) = MIN(FGVEC(4),ABS(FGVEC(6))-FGVEC(4))
         IF(FGVEC(4).LE.0.D0) THEN
           FGVEC(5) = -ABS(FGVEC(5))
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-
+C        call printg6("FOLD 9AB",FGVEC)
       ENDIF
 
 C
@@ -996,13 +1017,15 @@ C     fold the CDE boundary along g4 around |g5|/2
 C
       if ((FGVEC(1) - ABS(FGVEC(6))).LE.sqrt2*DELTA
      *  .AND. 2.D0*FGVEC(4).GT.ABS(FGVEC(5))) THEN
+        FGVEC(2) = FGVEC(1)+FGVEC(2)-ABS(FGVEC(6))
+        FGVEC(6) = 2.D0*FGVEC(1)-ABS(FGVEC(6))
         FGVEC(4) = MIN(FGVEC(4),ABS(FGVEC(5))-FGVEC(4))
         IF(FGVEC(4).LE.0.D0) THEN
           FGVEC(5) = -ABS(FGVEC(5))
           FGVEC(6) = -ABS(FGVEC(6))
         ENDIF
         folded = .true.
-
+C        call printg6("FOLD CDE",FGVEC)
       ENDIF
 
 
@@ -1017,11 +1040,12 @@ C
      *  +FGVEC(4)+FGVEC(5)+FGVEC(6).LE.sqrt5*DELTA
      *  .AND. FGVEC(1)-FGVEC(2)-FGVEC(4)+FGVEC(5)
      *        .LT.0.D0) THEN
-        
-        temp = FGVEC(4)
-        FGVEC(4) = FGVEC(5)
-        FGVEC(5) = temp
+        FGVEC(3) = FGVEC(1)+FGVEC(2)+FGVEC(3)
+     *    +FGVEC(4)+FGVEC(5)+FGVEC(6)
+        FGVEC(4) = -2.D0*FGVEC(2)-FGVEC(4)-FGVEC(6)
+        FGVEC(5) = -2.D0*FGVEC(1)-FGVEC(5)-FGVEC(6)
         folded = .true.
+C        call printg6("FOLD F",FGVEC)
       ENDIF
 
 C
@@ -1033,12 +1057,15 @@ C     by swapping g4 and g5
 C
       if (ABS(FGVEC(2)-FGVEC(1)).LE.DELTA
      *  .AND. ABS(FGVEC(4)).LT.ABS(FGVEC(5))) THEN
-        
+
+        temp = FGVEC(1)
+        FGVEC(1) = FGVEC(2)
+        FGVEC(2) = temp
         temp = FGVEC(4)
         FGVEC(4) = FGVEC(5)
         FGVEC(5) = temp
         folded = .true.
-
+C        call printg6("FOLD 1",FGVEC)
       ENDIF
 
 C
@@ -1051,11 +1078,14 @@ C
       if (ABS(FGVEC(3)-FGVEC(2)).LE.DELTA
      *  .AND. ABS(FGVEC(5)).LT.ABS(FGVEC(6))) THEN
         
+        temp = FGVEC(2)
+        FGVEC(2) = FGVEC(3)
+        FGVEC(3) = temp
         temp = FGVEC(5)
         FGVEC(5) = FGVEC(6)
         FGVEC(6) = temp
         folded = .true.
-
+C        call printg6("FOLD 2",FGVEC)
       ENDIF
 C
 C     fold 3,4,5 boundaries around g4,5,6 = 0 to all ---
@@ -1071,11 +1101,13 @@ C
         FGVEC(5) = -ABS(FGVEC(5))
         FGVEC(6) = -ABS(FGVEC(6))
         folded = .true.
+C        call printg6("FOLD 345",FGVEC)
 
       ENDIF
 
       folds = folds+1
       if (folded.and.folds.LT.9) go to 100
+
 
       END
 
