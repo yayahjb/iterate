@@ -71,9 +71,9 @@ C usually listed are:
 C
 C aP  triclinic (anorthic) primitive
 C mP  monoclinic primitive
-C mS  monoclinic side-centered (usually C-centered)
+C mS  monoclinic side-centered (C-centered)
 C oP  orthorhombic primitive
-C oS  orthorhombic side-centered
+C oC  orthorhombic side-centered (C-centered)
 C oF  orthorhombic face-centered
 C oI  orthorhombic body-centered
 C hP  hexagonal primitive
@@ -206,6 +206,8 @@ C**********************************************************************C
       EXTERNAL XDOTVN
       INTEGER NPROJ,I,J,JJ
       real*8 RATIO,SIZE,ERRSIZ
+      real*8 matrix3(9)
+      integer imat
 
       REAL*8 BEST(42)
       real*8 distances2Boundaries(21)
@@ -477,7 +479,12 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *             (NewCell(JJ,I),JJ=1,6)
                write(*,"(8H E3 cell, 6F9.3)" )
      *             (CenteredCell(JJ,I),JJ=1,6)
-               WRITE (*,*)
+
+               call Primitive2CenteredMatrix( IABS(ITDESG(I)), matrix3 )
+               WRITE (*,"(a,1h[,3i3,1h/,3i3,1h/,3i3,1h])")
+     *          " Primitive to Centered Matrix: ",
+     *          (int(matrix3(imat)),imat=1,9)
+               write(*,*)
             ELSE
                BEST(I) = -19191
                REDUCED(I) = .false.
@@ -606,6 +613,11 @@ C**********************************************************************C
      *          180.0D0/DATAN(1.0D0)/4.0D0
       END
 
+C**********************************************************************C
+C UncenterVector
+C
+C For each of the "IT" (International Tables) cases, convert
+C a primitive G6 vector to the corresponding centered G6 vector
 C**********************************************************************C
       subroutine UncenterVector( VBEST, ITDESG, CHRLAT, NewCell )
       implicit none
@@ -987,6 +999,73 @@ C**********************************************************************C
          enddo
       endif
 
+      end
+
+C**********************************************************************C
+C for a particular International Tables symbol, return the matrix
+C that converts from a primitive E3 cell to the corresponding
+C centered cell
+C**********************************************************************C
+      subroutine Primitive2CenteredMatrix( nMat, matrix )
+      integer nMat, n
+      real*8 matrix(9)
+      real*8 matrix3D(9,44)
+      real*8 factor
+      real*8 DET
+
+      data (matrix3D(i,01), i=1,9) /1, -1, 1, 1, 1, -1, -1, 1, 1 /
+      data (matrix3D(i,02), i=1,9) /1, -1, 0, -1, 0, 1, -1, -1, -1 /
+      data (matrix3D(i,03), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,04), i=1,9) /1, -1, 0, -1, 0, 1, -1, -1, -1 /
+      data (matrix3D(i,05), i=1,9) /1, 0, 1, 1, 1, 0, 0, 1, 1 /
+      data (matrix3D(i,06), i=1,9) /1, 0, 1, 0, 1, 1, 1, 1, 0 /
+      data (matrix3D(i,07), i=1,9) /1, 0, 1, 0, 1, 1, 1, 1, 0 /
+      data (matrix3D(i,08), i=1,9) /1, 0, 1, 1, 1, 0, 0, 1, 1 /
+      data (matrix3D(i,09), i=1,9) /1, 0, 0, -1, 1, 0, -1, -1, 3 /
+      data (matrix3D(i,10), i=1,9) /1, 1, 0, 1, -1, 0, 0, 0, -1 /
+      data (matrix3D(i,11), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,12), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,13), i=1,9) /1, 1, 0, -1, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,14), i=1,9) /1, 1, 0, -1, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,15), i=1,9) /1, 0, 0, 0, 1, 0, 1, 1, 2 /
+      data (matrix3D(i,16), i=1,9) /1, -1, 0, 1, 1, 2, -1, -1, 0 /
+      data (matrix3D(i,17), i=1,9) /0, 1, 1, 1, 1, 0, 1, 0, 1 /
+      data (matrix3D(i,18), i=1,9) /0, -1, 1, 1, -1, -1, 1, 0, 0 /
+      data (matrix3D(i,19), i=1,9) /-1, 0, 0, -1, 1, 1, 0, -1, 1 /
+      data (matrix3D(i,20), i=1,9) /0, 1, 1, 0, 1, -1, -1, 0, 0 /
+      data (matrix3D(i,21), i=1,9) /0, 1, 0, 0, 0, 1, 1, 0, 0 /
+      data (matrix3D(i,22), i=1,9) /0, 1, 0, 0, 0, 1, 1, 0, 0 /
+      data (matrix3D(i,23), i=1,9) /0, 1, 1, 0, -1, 1, 1, 0, 0 /
+      data (matrix3D(i,24), i=1,9) /1, 2, 1, 0, -1, 1, 1, 0, 0 /
+      data (matrix3D(i,25), i=1,9) /0, 1, 1, 0, -1, 1, 1, 0, 0 /
+      data (matrix3D(i,26), i=1,9) /-1, 2, 0, -1, 0, 2, 1, 0, 0 /
+      data (matrix3D(i,27), i=1,9) /0, 1, -1, 1, 0, 0, -1, 1, 1 /
+      data (matrix3D(i,28), i=1,9) /-1, 0, 0, -1, 0, 2, 0, 1, 0 /
+      data (matrix3D(i,29), i=1,9) /-1, 0, 0, -1, 2, 0, 0, 0, 1 /
+      data (matrix3D(i,30), i=1,9) /0, -1, 0, 0, -1, 2, 1, 0, 0 /
+      data (matrix3D(i,31), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,32), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,33), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+      data (matrix3D(i,34), i=1,9) /1, 0, 0, 0, 0, 1, 0, 1, 0 /
+      data (matrix3D(i,35), i=1,9) /0, 1, 0, 1, 0, 0, 0, 0, 1 /
+      data (matrix3D(i,36), i=1,9) /1, 0, 0, -1, 0, -2, 0, 1, 0 /
+      data (matrix3D(i,37), i=1,9) /1, 0, 2, 1, 0, 0, 0, 1, 0 /
+      data (matrix3D(i,38), i=1,9) /-1, 0, 0, 1, 2, 0, 0, 0, -1 /
+      data (matrix3D(i,39), i=1,9) /1, 2, 0, 1, 0, 0, 0, 0, 1 /
+      data (matrix3D(i,40), i=1,9) /0, -1, 0, 0, 1, 2, -1, 0, 0 /
+      data (matrix3D(i,41), i=1,9) /0, 1, 2, 0, 1, 0, 1, 0, 0 /
+      data (matrix3D(i,42), i=1,9) /1, 0, 0, 0, 1, 0, -1, -1, -2 /
+      data (matrix3D(i,43), i=1,9) /1, 0, 0, 1, 1, 2, 0, 1, 0 /
+      data (matrix3D(i,44), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
+
+      n = nMat
+      if ( nMat<1 .OR. nMat>44 ) n = 44
+
+      factor = 1.0
+      if ( DET( matrix3D(1,n)) .LT. 0.0 ) factor = -1.0
+
+      do 1000 i=1,9
+ 1000 matrix(i) = factor * matrix3D(i,n)
       end
 
 C**********************************************************************C
@@ -2576,7 +2655,7 @@ C**********************************************************************C
 
 
       data ngtype(17) /-36/
-      data lattyp(17) /'oS'/
+      data lattyp(17) /'oC'/
       data pjnorm(17) /2D0/
       data (projct(i,17),i=1,36) /
      1  1, 0, 0, 0,-1, 0,
@@ -2588,7 +2667,7 @@ C**********************************************************************C
 
 
       data ngtype(18) /-38/
-      data lattyp(18) /'oS'/
+      data lattyp(18) /'oC'/
       data pjnorm(18) /2D0/
       data (projct(i,18),i=1,36) /
      1  1, 0, 0, 0, 0,-1,
@@ -2600,7 +2679,7 @@ C**********************************************************************C
 
 
       data ngtype(19) /-13/
-      data lattyp(19) /'oS'/
+      data lattyp(19) /'oC'/
       data pjnorm(19) /2D0/
       data (projct(i,19),i=1,36) /
      1  1,1,0,0,0,0,
@@ -2612,7 +2691,7 @@ C**********************************************************************C
 
 
       data ngtype(20) /-23/
-      data lattyp(20) /'oS'/
+      data lattyp(20) /'oC'/
       data pjnorm(20) /2D0/
       data (projct(i,20),i=1,36) /
      1  2,0,0,0,0,0,
@@ -2624,7 +2703,7 @@ C**********************************************************************C
 
 
       data ngtype(21) /-40/
-      data lattyp(21) /'oS'/
+      data lattyp(21) /'oC'/
       data pjnorm(21) /2D0/
       data (projct(i,21),i=1,36) /
      1  2, 0, 0, 0, 0, 0,
