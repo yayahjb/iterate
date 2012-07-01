@@ -171,7 +171,7 @@ C**********************************************************************C
       real*8 VRED(6,MAXPRJ)
       real*8 VOUT(6,MAXPRJ)
       real*8 MPRIM(36)
-      INTEGER MRED(36),MRTEST(36),IUM(36)
+      INTEGER MRED(36),IUM(36)
       real*8 M3RED(3,3)
       real*8 GOUT(6),GRED(6),CRED(6)
       real*8 ZEROS(6)
@@ -430,8 +430,6 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                  WRITE (*,*) "NR G6: ", VRED(1,I),
      *             VRED(2,I),VRED(3,I),VRED(4,I),
      *             VRED(5,I),VRED(6,I)
-                 WRITE (*,*) "G6 Reduction Matrix:"
-                 WRITE (*,'(12x,6I6)') MRTEST
                ENDIF
             ENDIF
 
@@ -472,7 +470,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                call cpyvn(6,TG,VOUT(1,I))
                WRITE (*,*)
                call UncenterVector( VBEST, ITDESG(I),
-     *             CHRLAT(I), NewCell(1,I) )
+     *             NewCell(1,I) )
                call CalculateCenteredCell( NewCell(1,I),
      *             CenteredCell(1,I) )
                write(*,"(8H G6 cell, 6F9.3)" )
@@ -619,18 +617,16 @@ C
 C For each of the "IT" (International Tables) cases, convert
 C a primitive G6 vector to the corresponding centered G6 vector
 C**********************************************************************C
-      subroutine UncenterVector( VBEST, ITDESG, CHRLAT, NewCell )
+      subroutine UncenterVector( VBEST, ITDESG, NewCell )
       implicit none
       real*8 VBEST(6), NewCell(6)
       integer ITDESG
       integer iCellType
-      Character*2 CHRLAT
 
       real*8 matrices(36,44)
       integer i
 
-      character*1 latticeSymbol
-
+ 
       data (matrices(i,01),i=1,36)/
      *   1.00,  1.00,  1.00, -1.00,  1.00, -1.00,
      *   1.00,  1.00,  1.00, -1.00, -1.00,  1.00,
@@ -987,8 +983,6 @@ C**********************************************************************C
 
       iCellType = iabs(ITDESG)
 
-      latticeSymbol(1:1) = CHRLAT(2:2)
-
       if (iCellType .LE. 43 ) then
          call RMV6( VBEST, matrices(1,iCellType), NewCell )
       elseif (iCellType .EQ. 15 ) then
@@ -1058,8 +1052,7 @@ C**********************************************************************C
       data (matrix3D(i,43), i=1,9) /1, 0, 0, 1, 1, 2, 0, 1, 0 /
       data (matrix3D(i,44), i=1,9) /1, 0, 0, 0, 1, 0, 0, 0, 1 /
 
-      n = nMat
-      if ( nMat<1 .OR. nMat>44 ) n = 44
+      n = min(max(nMat,1),44)
 
       factor = 1.0
       if ( DET( matrix3D(1,n)) .LT. 0.0 ) factor = -1.0
@@ -1131,14 +1124,14 @@ C**********************************************************************C
       real*8 boundaryFX
       real*8 a
       real*8 ERRSIZ
-      integer i, ip, iv, n
+      integer i, ip, iv
       real*8 anorm
       logical DEBUG
       character*1 XCONE
       real*8 distances2Boundaries(21)
 C----------------------------------------------------------------------C
 C get the projectors
-      n = FillPrjList( basicBoundaries )
+      i = FillPrjList( basicBoundaries )
 C convert the projectors to perp
       call MakePerpList( 21, basicBoundaries )
 
@@ -1995,7 +1988,7 @@ C**********************************************************************C
       LOGICAL AGAIN
       INTEGER M(36),M1(36),M2(36)
       real*8 ZEROS(6)
-      integer i, last, ncycle
+      integer i, ncycle
       DATA ZEROS /6*0.0/
 C----------------------------------------------------------------------C
 
@@ -2008,7 +2001,6 @@ C----------------------------------------------------------------------C
       CALL IUNTMN (6,M)
 
  1000 CONTINUE
-      LAST = 0
 C     Convert to standard presentation, M is the matrix
       CALL MKNORM (VIN,M1,VOUT,DELTA,'MKNORM')
       CALL CPYVN(6,VOUT,VIN)
@@ -2024,7 +2016,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 5
       ELSEIF (ABS(VIN(5)) .GT. ABS(VIN(1)) + DELTA) THEN
          M1(13) = 1
          M1(17) = INT(-dsign (1.0D0,VIN(5)))
@@ -2034,7 +2025,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 6
       ELSEIF (ABS(VIN(6)) .GT. ABS(VIN(1))+ DELTA) THEN
          M1(7) = 1
          M1(12) = INT(-dsign(1.0D0,VIN(6)))
@@ -2044,7 +2034,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 7
       ELSEIF (VIN(4)+VIN(5)+VIN(6)+ABS(VIN(1))+ABS(VIN(2))+DELTA
      2  .LT. 0.0D0) THEN
          DO 2000 I=13,18
@@ -2057,7 +2046,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 8
       ELSEIF ( (ABS(VIN(4)-VIN(2)).LE.DELTA
      2            .AND. 2.0D0*VIN(5)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(4)+VIN(2)).LE.DELTA
@@ -2070,7 +2058,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 15
       ELSEIF ( (ABS(VIN(5)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(5)+VIN(1)).LE.DELTA
@@ -2083,7 +2070,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 16
       ELSEIF ( (ABS(VIN(6)-VIN(1)).LE.DELTA
      2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(5)) .OR.
      3         (ABS(VIN(6)+VIN(1)).LE.DELTA
@@ -2096,8 +2082,6 @@ C     Convert to standard presentation, M is the matrix
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 17
-C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
       ELSEIF ( ABS((VIN(4)+VIN(5)+VIN(6)
      2 +ABS(VIN(1))+ABS(VIN(2))))
      3 .LE.DELTA .AND.
@@ -2112,7 +2096,6 @@ C23456789 123456789 123456789 123456789 123456789 123456789 123456789 123
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
-         LAST = 18
       ELSE
          AGAIN = .FALSE.
          CALL CPYVN (6,VIN,VOUT)
@@ -3349,7 +3332,7 @@ C**********************************************************************C
       subroutine  v2Cart(v ,v1,v2,v3 )
       implicit none
       real*8 v(6),v1(3),v2(3),v3(3),cell(6)
-      real*8 mat8, SinAl, SinBe, SinGA, Root, Sqr
+      real*8 mat8, SinBe, SinGA, Root, Sqr
 C-----------------------------------------------------------------------
       Cell(1) = Root(v(1))
       Cell(2) = Root(v(2))
@@ -3357,7 +3340,6 @@ C-----------------------------------------------------------------------
       Cell(4) = 0.5*v(4)/(Cell(2)*Cell(3))
       Cell(5) = 0.5*v(5)/(Cell(1)*Cell(3))
       Cell(6) = 0.5*v(6)/(Cell(1)*Cell(2))
-      SinAl = Sqrt(1-Sqr(Cell(4)))
       SinBe = Sqrt(1-Sqr(Cell(5)))
       SinGa = Sqrt(1-Sqr(Cell(6)))
 
