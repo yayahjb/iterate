@@ -174,7 +174,6 @@ C**********************************************************************C
       INTEGER MRED(36),IUM(36)
       real*8 M3RED(3,3)
       real*8 GOUT(6),GRED(6),CRED(6)
-      real*8 ZEROS(6)
       real*8 NCDIST
       LOGICAL INPCEL
       LOGICAL EMBDIST, COMBMODE, NCBMODE, HTMLOUT, QUITFLG
@@ -219,7 +218,6 @@ C**********************************************************************C
 
       LOGICAL NEARRED
 
-      DATA ZEROS /6*0.0/
       DATA bnames/ '1','2','3','4','5','6','7','8','9',
      *  'A','B','C','D','E','F',
      *  '678X','9ABCDEX','FX','67','9A','CD'/
