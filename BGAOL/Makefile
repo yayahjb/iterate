@@ -73,15 +73,17 @@ BGAOLVERSION = 1.0
 BGAOLTARBALLURL = http://downloads.sf.net/iterate/bgaol-$(BGAOLVERSION).tar.gz
 BGAOLZIPURL = http://downloads.sf.net/iterate/bgaol-$(BGAOLVERSION).zip
 
-HTFLAGS 	?=	-DCGIBIN=$(CGIBINEXT) \
+
+CGIPATH		?=	http://$(HTTPDSERVER)$(CGIBINEXT)
+BINPATH		?=	$(BINDEST)/bgaol
+HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 		-DHTTPDSERVER=$(HTTPDSERVER) \
 		-DMATHSCRIBEURL=$(MATHSCRIBEURL) \
 		-DBGAOLTARBALLURL=$(BGAOLTARBALLURL) \
 		-DBGAOLZIPURL=$(BGAOLZIPURL)
 		
 
-CGIPATH		?=	http://$(HTTPDSERVER)$(CGIBINEXT)/bgaol.csh
-BINPATH		?=	$(BINDEST)/bgaol
+
 #
 #
 edit:	
@@ -96,6 +98,9 @@ edit:
 		@/bin/echo "SEARCHURL ------ currently:" $(SEARCHURL)
 		@/bin/echo "BINDEST -------- currently:" $(BINDEST)
 		@/bin/echo "HTDOCS  -------- currently:" $(HTDOCS)
+		@/bin/echo "CGIPATH  ------- currently:" $(CGIPATH)
+		@/bin/echo "FC  ------------ currently:" $(FC)
+		@/bin/echo "FFLAGS  -------- currently:" $(FLAGS)
 		@/bin/echo ""
 		@/bin/echo "**************************************"
 		@/bin/echo "* Then:                              *"
@@ -110,6 +115,7 @@ clean:
 		-rm edit
 		-rm bgaol.html
 		-rm bgaol
+		-rm bgaol.o
 		-rm bgaol.csh
 		-rm *.bak
 
@@ -123,7 +129,7 @@ bgaol.csh:	bgaol.csh.m4 Makefile
 		-DSEARCHURL=$(SEARCHURL)\
 		< bgaol.csh.m4 > bgaol.csh
 #
-install:	bgaol bgaol.csh bgaol.html \
+install:	edit_done bgaol bgaol.csh bgaol.html \
 		$(MATHSCRIBEPATH)
 		-mkdir -p $(BINDEST)
 		-mkdir -p $(CGIBIN)
@@ -132,7 +138,9 @@ install:	bgaol bgaol.csh bgaol.html \
 		chmod 755 bgaol.csh
 		cp bgaol $(BINDEST)
 		cp bgaol.csh $(CGIBIN)
+		chmod 755 $(CGIBIN)/bgaol.csh
 		cp bgaol.html $(HTDOCS)
+		ln -f -s $(HTDOCS)/bgaol.html $(HTDOCS)/index.html
 		cp -r $(MATHSCRIBEPATH) $(HTDOCS)/$(MATHSCRIBEPATH)
 
 #		

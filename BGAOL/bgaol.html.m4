@@ -128,7 +128,7 @@ Bravais General Analysis of Lattices (BGAOL)</H2>
 <P> Lawrence C. Andrews, Micro Encoder Inc.,
 <BR>Herbert J. Bernstein, Bernstein+Sons,
 <A HREF=mailto:yaya@bernstein-plus-sons.com>yaya@bernstein-plus-sons.com</A>
-<FORM method=POST ACTION="'HTTPDSERVER()CGIBINEXT()`/bgaol.csh">
+<FORM method=POST ACTION="'CGIBIN()`/bgaol.csh">
 <BR>
 <P>
 <STRONG>
