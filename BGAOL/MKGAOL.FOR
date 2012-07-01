@@ -279,7 +279,7 @@ C**********************************************************************C
       real*8 dmin, gerr, grmin
       real*8 XDOTVN, NCDIST
       integer IVB(NVMAX)
-      integer i, nv1, nexamined, id, jj, ib
+      integer i, nv1, nexamined, id
       integer nearst
       INTEGER MS(36,15)
       real*8 SEEDS(6,15)
@@ -651,7 +651,8 @@ C      WRITE(*,*) "PRJPERP",PRJPERP
       SUBROUTINE PRINTG6(TEXT,VECTOR)
       implicit none
       character*(*) TEXT
-      real*8 VECTOR(6),FVECTOR(6)
+      real*8 VECTOR(6)
+C      real*8 FVECTOR(6)
       WRITE(*,'(A,1x,6F9.2)')TEXT,VECTOR
 
 C      CALL FOLDBED(VECTOR,FVECTOR,0.05D1)
@@ -676,7 +677,7 @@ C
       real*8 PRJ(36,21),PRJPERP(36,21)
       real*8 SEEDS(6,15), SEEDDIST(15)
       logical GOODSEED(15)
-      character*20 SEEDLAB
+C      character*20 SEEDLAB
       real*8 vtemp(6)
       real*8 boundary67
       real*8 boundary9A

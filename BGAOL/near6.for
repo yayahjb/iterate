@@ -103,8 +103,8 @@ C**********************************************************************C
       CHARACTER*6 TEST
       LOGICAL DEBUG
       INTEGER ISTAK(1000)
-      integer ip, idout, dir, dirprv, end, id
-      integer ichild, ipoint, iprev, iright, istkp, left, link, right
+      integer ip, idout, dir, end, id
+      integer ichild, ipoint, iright, istkp, left, link, right
       real*8 TREE(MXTREE),X(6)
       real*8 DL, DR, CURMIN
       real*8 trelen
@@ -122,11 +122,7 @@ C----------------------------------------------------------------------C
       IPOINT = 2
       CURMIN = RADMAX
       DIR = LEFT
-      DIRPRV = RIGHT
-      IPREV = IPOINT -1
  1000 CONTINUE
-      IPREV = IPOINT
-      DIRPRV = DIR
       IF (DEBUG) WRITE (*,*)  ' IN NEARST 1000, IPOINT = ',IPOINT
       IF (TREE(IPOINT) .EQ. 0) THEN
          IF (DEBUG) WRITE (*,*) ' AT AN END WITH IPOINT = ',IPOINT
@@ -224,7 +220,6 @@ C**********************************************************************C
       INTEGER FUNCTION INSPHR (MXTREE,X,RADMAX,TREE,
      2    MXLIST,NLIST,LIST,IDLIST,TEST)
       implicit none
-      integer iprev
       CHARACTER*6 TEST
       LOGICAL DEBUG
       INTEGER ISTAK(1000)
@@ -233,7 +228,7 @@ C**********************************************************************C
       real*8 x(6)
       real*8 trelen
       integer iunstk
-      integer mxlist, nlist,dir, dirprv
+      integer mxlist, nlist,dir, iprev, dirprv
       integer ipoint, iright, istkp, link
       real*8 curmin, DL, DR
       real*8 TREE(MXTREE)
