@@ -505,7 +505,7 @@ sufficiently close to $M_{\text''`&Omega;''`}(P_{\text''`&Omega;''`}(g))$ for it
 <h2>Note on the Matches Reported</h2>
 <P>
 
-The program on this Web page implements a search in <b>G<sup>6</sup></b> for the various Bravais lattices that the user's 
+The program on this Web page implements a search in <b>G<sup>6</sup></b> for the various Bravais lattices that the user''`s 
 cell may fit. For each lattice type, the best metric match is reported. If the higher symmetry type is 
 actually correct, then that is likely to be the best cell from which to start further refinement. However, 
 the possibility exists that one of the rejected cells (which did not match as well) was actually the 
@@ -567,3 +567,4 @@ determination of a unique conventional cell. Zeitschrift fu r Kristallographie, 
 </body>
 </html>
 '
+
