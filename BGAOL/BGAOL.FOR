@@ -188,6 +188,7 @@ C**********************************************************************C
       integer iv, nv
       real*8 band
       integer bandcount
+      integer DegreesofFreedom
       logical DEBUG, DEBUGD
 
       real*8 dbest, dcurr, dtemp
@@ -480,7 +481,18 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
                WRITE (*,"(a,1h[,3i3,1h/,3i3,1h/,3i3,1h])")
      *          " Primitive to Centered Matrix: ",
      *          (int(matrix3(imat)),imat=1,9)
-               write(*,*)
+               WRITE (*,"(2(1x,a,f8.2,4x,a,f8.2/))") 
+     *           " G6 DF-weighted distance: ",
+     *              DSQRT(DBLE(DegreesofFreedom(ITDESG(I))))*
+     *              BEST(I),
+     *           " E3 % absolute distance:  ",
+     *              DSQRT(
+     *              DBLE(DegreesofFreedom(ITDESG(I)))*
+     *              BEST(I)/6.)/2.,
+     *           " G6 % angular Z-score:    ",
+     *              100.D0*datan2(BEST(I),size)
+     *              /datan2(ERRSIZ,size) 
+               write(*,*) 
             ELSE
                BEST(I) = -19191
                REDUCED(I) = .false.
@@ -503,14 +515,16 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
 
          IF (HTMLOUT) WRITE(*,*),"<a name=results></pre></div><pre>"
 
-      call SortDists(NPROJ, BEST, IORD, ERRSIZ)
+      call SortDists(NPROJ, BEST, ITDESG, IORD, ERRSIZ)
       if (modef.eq.1)
      *  WRITE(*,*) "UNCONSTRAINED ITERATIVE MODE SEARCH"
       if (modef.eq.2)
      *  WRITE(*,*) "NIGGLI CONE BOUNDARY-CONSTRAINED SEARCH"
       
 
-      write (*,*) "Final List              Lat     Dist    Cell"
+      write (*,"(a,55x,a)") 
+     *  " Final List              Lat     Dist    Cell",
+     *  "DF dist  E3 dist  %Z-score"
       DO iv = 1,3
       IF (HTMLOUT) THEN
         WRITE(*,*) "<hr />"
@@ -559,18 +573,35 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
            endif
            if (ITDESG(IORD(I)).GT.0) then
            WRITE(*, "(a,3HIT(, I3, 1H),a,4H +++,1X,A4,
-     *        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
+     *        8HREDUCED ,A2, 1x, F8.3,3x,6F9.3,2x,3F9.3)" )
      *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
      *        HTMLEND(1:LHTMLEND), sprefix,
      *        CHRLAT(IORD(I)), BEST(IORD(I)),
-     *        (CenteredCell(JJ,IORD(I)),JJ=1,6)
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
+     *        DSQRT(
+     *        DBLE(DegreesofFreedom(ITDESG(IORD(I)))))*
+     *        BEST(IORD(I)),
+     *        DSQRT(
+     *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
+     *        BEST(IORD(I))/6.)/2.,
+     *        100.D0*datan2(BEST(IORD(I)),size)
+     *              /datan2(ERRSIZ,size) 
            else
            WRITE(*, "(a,3HIT(, I3, 1H),a,4H ---,1X,A4,
-     *        8HREDUCED ,A2, 2x, F9.3,1x,6F9.3)" )
+     *        8HREDUCED ,A2, 1x, F8.3,3x,6F9.3,2x,3F9.3)" )
      *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
      *        HTMLEND(1:LHTMLEND), sprefix,
      *        CHRLAT(IORD(I)), BEST(IORD(I)),
-     *        (CenteredCell(JJ,IORD(I)),JJ=1,6)
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
+     *        DSQRT(
+     *        DBLE(DegreesofFreedom(ITDESG(IORD(I)))))*
+     *        BEST(IORD(I)),
+     *        DSQRT(
+     *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
+     *        BEST(IORD(I))/6.)/2.,
+     *        100.D0*datan2(BEST(IORD(I)),size)
+     *              /datan2(ERRSIZ,size) 
+
            endif
            bandcount = bandcount+1
          ENDIF
@@ -591,6 +622,20 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
  9000 continue
 
       END
+
+C**********************************************************************C
+      integer function DegreesofFreedom(ITDESG)
+      implicit none
+      integer ITDESG, idf(44)
+      data idf/
+     *  1,2,1,2,1,2,2,3,2,4,
+     *  2,2,3,4,2,3,4,2,3,4,
+     *  2,2,3,2,4,3,4,4,4,4,
+     *  5,3,4,4,4,3,4,3,4,3,
+     *  4,3,4,5/
+       DegreesofFreedom = idf(max(1,min(ITDESG,44)))
+       return
+       end
 
 C**********************************************************************C
       subroutine CalculateCenteredCell( NewCell, CenteredCell )
@@ -1060,12 +1105,13 @@ C**********************************************************************C
       end
 
 C**********************************************************************C
-      subroutine SortDists(NDIST, DIST, IORD, ERRSIZ )
+      subroutine SortDists(NDIST, DIST, ITDESG, IORD, ERRSIZ )
       implicit none
-      integer NDIST, IORD(NDIST), II, IGAP, ITEMP
-      real*8 ERRSIZ
+      integer NDIST, IORD(NDIST), II, IGAP, ITEMP, ITDESG(42)
+      real*8 ERRSIZ, DFCORR, DFCORR1
       logical INORD
       real*8 DIST(NDIST)
+      integer DegreesofFreedom
       do II = 1, NDIST
         IORD(II) = II
       enddo
@@ -1075,8 +1121,12 @@ C     bring all elements .le. ERRSIZ to the front
  100  continue
       INORD = .true.
       do ii = 1, NDIST-1
-      if (DIST(IORD(II)) .gt. ERRSIZ
-     *  .AND. DIST(IORD(II+1)).le.ERRSIZ) then
+      DFCORR = DSQRT(
+     *  DBLE(DegreesofFreedom(ITDESG(IORD(II)))))
+      DFCORR1 = DSQRT(
+     *  DBLE(DegreesofFreedom(ITDESG(IORD(II+1)))))
+      if (DIST(IORD(II))*DFCORR .gt. ERRSIZ
+     *  .AND. DIST(IORD(II+1))*DFCORR1.le.ERRSIZ) then
         ITEMP = IORD(II)
         IORD(II) = IORD(II+1)
         IORD(II+1) = ITEMP
@@ -1092,8 +1142,13 @@ C     sort all elements .gt. ERRSIZ
  2000 continue
       INORD = .true.
       do II = 1, NDIST-IGAP, IGAP
-      if (DIST(IORD(II)) .gt. DIST(IORD(II+IGAP))
-     *  .AND. DIST(IORD(II)) .gt. ERRSIZ) then
+        DFCORR = DSQRT(
+     *  DBLE(DegreesofFreedom(ITDESG(IORD(II)))))
+        DFCORR1 = DSQRT(
+     *  DBLE(DegreesofFreedom(ITDESG(IORD(II+IGAP)))))
+      if (DIST(IORD(II))*DFCORR .gt.
+     *   DIST(IORD(II+IGAP))*DFCORR1
+     *  .AND. DIST(IORD(II))*DFCORR .gt. ERRSIZ) then
         ITEMP = IORD(II)
         IORD(II) = IORD(II+IGAP)
         IORD(II+IGAP) = ITEMP
