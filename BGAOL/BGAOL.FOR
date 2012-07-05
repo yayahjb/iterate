@@ -633,7 +633,7 @@ C**********************************************************************C
      *  2,2,3,2,4,3,4,4,4,4,
      *  5,3,4,4,4,3,4,3,4,3,
      *  4,3,4,5/
-       DegreesofFreedom = idf(max(1,min(ITDESG,44)))
+       DegreesofFreedom = idf(max(1,min(iabs(ITDESG),44)))
        return
        end
 
