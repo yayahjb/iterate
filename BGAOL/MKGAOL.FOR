@@ -905,7 +905,7 @@ C        write(*,*) "ind ", ind
           if (bindex(ind).eq.8 
      *      .or. bindex(ind).eq.11
      *      .or. bindex(ind).eq.14) then
-            jnd = ind-2
+            jnd = ind-1
             if (valid1(jnd)) then
             vdist(ind,3) = g456dist(fpgv1(1,jnd),fpgv2(1,ind))
             h1 = vdist(jnd,1)
@@ -931,7 +931,7 @@ C        write(*,*) "ind ", ind
           if (bindex(ind).eq.8 
      *      .or. bindex(ind).eq.11 
      *      .or. bindex(ind).eq.14) then
-            jnd = ind-2
+            jnd = ind-1
             if (valid2(jnd)) then
             vdist(ind,3) = g456dist(fpgv1(1,ind),fpgv2(1,jnd))
             h1 = vdist(ind,1)
@@ -983,15 +983,17 @@ C      call printg6("FOLDBED",GVEC)
 C
 C     fold the 678 boundary along g4 around |g6|/2
 C
-      if ((FGVEC(2) - ABS(FGVEC(4))).LE.sqrt2*DELTA
-     *  .AND. 2.D0*FGVEC(5).GT.ABS(FGVEC(6))) THEN
-        FGVEC(3) = FGVEC(2)+FGVEC(3)-ABS(FGVEC(4))
-        FGVEC(4) = 2.D0*FGVEC(2)-ABS(FGVEC(4))
-        FGVEC(5) = MIN(FGVEC(5),ABS(FGVEC(6))-FGVEC(5))
-        IF(FGVEC(5).LE.0.D0) THEN
-          FGVEC(4) = -ABS(FGVEC(4))
-          FGVEC(6) = -ABS(FGVEC(6))
-        ENDIF
+      temp = FGVEC(6)-FGVEC(5)
+      if ((FGVEC(2) - FGVEC(4)).LE.sqrt2*DELTA
+     *  .AND. FGVEC(5).GT.temp) THEN
+        FGVEC(3) = FGVEC(2)+FGVEC(3)-FGVEC(4)
+        FGVEC(5) = temp
+        if (temp.le.0.D0) THEN
+          FGVEC(6) = -FGVEC(6)
+          FGVEC(4) = -2.D0*FGVEC(2)+FGVEC(4)
+        else
+          FGVEC(4) = 2.D0*FGVEC(2)-FGVEC(4)
+        endif
         folded = .true.
 C        call printg6("FOLD 678",FGVEC)
       ENDIF
@@ -1000,15 +1002,17 @@ C        call printg6("FOLD 678",FGVEC)
 C
 C     fold the 9AB boundary along g4 around |g6|/2
 C
-      if ((FGVEC(1) - ABS(FGVEC(5))).LE.sqrt2*DELTA
-     *  .AND. 2.D0*FGVEC(4).GT.ABS(FGVEC(6))) THEN
-        FGVEC(3) = FGVEC(1)+FGVEC(3)-ABS(FGVEC(5))
-        FGVEC(5) = 2.D0*FGVEC(1)-ABS(FGVEC(5))
-        FGVEC(4) = MIN(FGVEC(4),ABS(FGVEC(6))-FGVEC(4))
-        IF(FGVEC(4).LE.0.D0) THEN
-          FGVEC(5) = -ABS(FGVEC(5))
-          FGVEC(6) = -ABS(FGVEC(6))
-        ENDIF
+      temp = FGVEC(6)-FGVEC(4)
+      if ((FGVEC(1) - FGVEC(5)).LE.sqrt2*DELTA
+     *  .AND. FGVEC(4).GT.temp) THEN
+        FGVEC(3) = FGVEC(1)+FGVEC(3)-FGVEC(5)
+        FGVEC(4) = temp
+        if (temp.le.0.D0) THEN
+          FGVEC(6) = -FGVEC(6)
+          FGVEC(5) = -2.D0*FGVEC(2)+FGVEC(5)
+        else
+          FGVEC(5) = 2.D0*FGVEC(2)-FGVEC(5)
+        endif
         folded = .true.
 C        call printg6("FOLD 9AB",FGVEC)
       ENDIF
@@ -1016,15 +1020,17 @@ C        call printg6("FOLD 9AB",FGVEC)
 C
 C     fold the CDE boundary along g4 around |g5|/2
 C
-      if ((FGVEC(1) - ABS(FGVEC(6))).LE.sqrt2*DELTA
-     *  .AND. 2.D0*FGVEC(4).GT.ABS(FGVEC(5))) THEN
-        FGVEC(2) = FGVEC(1)+FGVEC(2)-ABS(FGVEC(6))
-        FGVEC(6) = 2.D0*FGVEC(1)-ABS(FGVEC(6))
-        FGVEC(4) = MIN(FGVEC(4),ABS(FGVEC(5))-FGVEC(4))
-        IF(FGVEC(4).LE.0.D0) THEN
-          FGVEC(5) = -ABS(FGVEC(5))
-          FGVEC(6) = -ABS(FGVEC(6))
-        ENDIF
+      temp = FGVEC(5)-FGVEC(4)
+      if ((FGVEC(1) - FGVEC(6)).LE.sqrt2*DELTA
+     *  .AND. FGVEC(4).GT.temp) THEN
+        FGVEC(2) = FGVEC(1)+FGVEC(2)-FGVEC(6)
+        FGVEC(4) = temp
+        if (temp.le.0.D0) THEN
+          FGVEC(5) = -FGVEC(5)
+          FGVEC(6) = -2.D0*FGVEC(1)+FGVEC(6)
+        else
+          FGVEC(6) = 2.D0*FGVEC(1)-FGVEC(6)
+        endif
         folded = .true.
 C        call printg6("FOLD CDE",FGVEC)
       ENDIF
@@ -1040,7 +1046,7 @@ C
       if (FGVEC(1)+FGVEC(1)
      *  +FGVEC(4)+FGVEC(5)+FGVEC(6).LE.sqrt5*DELTA
      *  .AND. FGVEC(1)-FGVEC(2)-FGVEC(4)+FGVEC(5)
-     *        .LT.0.D0) THEN
+     *        .LT.-1.D-6) THEN
         FGVEC(3) = FGVEC(1)+FGVEC(2)+FGVEC(3)
      *    +FGVEC(4)+FGVEC(5)+FGVEC(6)
         FGVEC(4) = -2.D0*FGVEC(2)-FGVEC(4)-FGVEC(6)

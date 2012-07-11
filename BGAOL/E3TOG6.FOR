@@ -117,6 +117,12 @@ C      write (*,*) ' t1 ',t1,t1min,bitmin
          m(i,j) = -m(i,j)
  7000    continue
       endif
+      do 8000 l=1,9
+        i = (l-1)/3 + 1
+        j = l -3*(i-1)
+        if (dabs(m(i,j)).lt.1.d-8) m(i,j) = 0.D0
+ 8000 continue
+
       end
 
 
@@ -173,6 +179,11 @@ C         write (*,*) ' bits,signs ',bits,signs
          m(i,j) = -m(i,j)
  7000    continue
       endif
+      do 8000 l=1,9
+        i = (l-1)/3 + 1
+        j = l -3*(i-1)
+        if (dabs(m(i,j)).lt.1.D-8) m(i,j) = 0.D0
+ 8000 continue
       end
 
 

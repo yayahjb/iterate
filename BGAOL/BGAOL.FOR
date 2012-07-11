@@ -315,7 +315,7 @@ C----------------------------------------------------------------------C
 
          CALL CHKVEC(GOUT)
          CALL IUNTMN(6,MRED)
-         CALL REDUCE (GOUT,MRED,GRED,0.D0,'REDUCE')
+         CALL REDUCE (GOUT,MRED,GRED,1.D-6,'REDUCE')
          CALL CHKVEC(GRED)
          CALL G6TOC (GRED,CRED,'G6TOC ')
          SIZE = DSQRT(XDOTVN(6,GRED,GRED))
@@ -485,13 +485,15 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *           " G6 DF-weighted distance: ",
      *              DSQRT(DBLE(DegreesofFreedom(ITDESG(I))))*
      *              BEST(I),
-     *           " E3 % absolute distance:  ",
+     *           " E3 % absolute distance:    ",
      *              DSQRT(
      *              DBLE(DegreesofFreedom(ITDESG(I)))*
      *              BEST(I)/6.)/2.,
-     *           " G6 % angular Z-score:    ",
-     *              100.D0*datan2(BEST(I),size)
-     *              /datan2(ERRSIZ,size) 
+     *           " G6 angular Z-score:    ",
+     *              datan2(BEST(I),
+     *                max(0.D0,dabs(size**2-BEST(I)**2)))
+     *              /datan2(ERRSIZ,
+     *                max(0.D0,dabs(size**2-ERRSIZ**2))) 
                write(*,*) 
             ELSE
                BEST(I) = -19191
@@ -524,7 +526,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
 
       write (*,"(a,55x,a)") 
      *  " Final List              Lat     Dist    Cell",
-     *  "DF dist  E3 dist  %Z-score"
+     *  "DF dist  E3 dist  Z-score"
       DO iv = 1,3
       IF (HTMLOUT) THEN
         WRITE(*,*) "<hr />"
@@ -584,7 +586,7 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *        DSQRT(
      *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
      *        BEST(IORD(I))/6.)/2.,
-     *        100.D0*datan2(BEST(IORD(I)),size)
+     *        datan2(BEST(IORD(I)),size)
      *              /datan2(ERRSIZ,size) 
            else
            WRITE(*, "(a,3HIT(, I3, 1H),a,4H ---,1X,A4,
@@ -599,8 +601,10 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *        DSQRT(
      *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
      *        BEST(IORD(I))/6.)/2.,
-     *        100.D0*datan2(BEST(IORD(I)),size)
-     *              /datan2(ERRSIZ,size) 
+     *        datan2(BEST(IORD(I)),
+     *          dsqrt(max(0.D0,size**2-BEST(IORD(I))**2)))
+     *        /datan2(ERRSIZ,
+     *          dsqrt(max(0.D0,size**2-ERRSIZ**2)))
 
            endif
            bandcount = bandcount+1
@@ -1750,10 +1754,10 @@ C----------------------------------------------------------------------C
  1000 SUM = SUM + ABS(VE(I))
 
       IF (SUM .EQ. 0D0) THEN
-         WRITE (*,'(1X,6F10.2)') V
+         WRITE (*,'(1X,6F12.2)') V
       ELSE
          DO 3000 I=1,6
-            WRITE (*,'(1X,F12.3,3X,F10.3)') V(I),VE(I)
+            WRITE (*,'(1X,F13.3,3X,F11.3)') V(I),VE(I)
  3000    CONTINUE
       ENDIF
       WRITE (*,*)
@@ -2091,46 +2095,72 @@ C     Convert to standard presentation, M is the matrix
      2  .LT. 0.0D0) THEN
          DO 2000 I=13,18
  2000    M1(I) = 1
-         M1(20) = 2
-         M1(24) = 1
-         M1(25) = 2
-         M1(30) = 1
+         M1(20) = -2
+         M1(22) = -1
+         M1(24) = -1
+         M1(25) = -2
+         M1(29) = -1
+         M1(30) = -1
          AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
       ELSEIF ( (ABS(VIN(4)-VIN(2)).LE.DELTA
-     2            .AND. 2.0D0*VIN(5)+DELTA.LT.VIN(6)) .OR.
+     2            .AND. 2.0D0*VIN(5)-DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(4)+VIN(2)).LE.DELTA
      4            .AND. VIN(6)-DELTA.LE.0.0D0)) THEN
          M1(14) = 1
-         M1(16) = INT(-dsign(1.0D0,VIN(4)))
-         M1(20) = 2*M1(16)
-         M1(30) = M1(16)
+         M1(20) = 2
+         M1(29) = -1
+         IF (VIN(4).LE.DELTA) THEN
+           M1(16) = 1
+           M1(30) = -1
+           M1(36) = -1
+         ELSE
+           M1(16) = -1
+           M1(22) = -1
+           M1(30) = 1
+         ENDIF
          AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
       ELSEIF ( (ABS(VIN(5)-VIN(1)).LE.DELTA
-     2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(6)) .OR.
+     2            .AND. 2.0D0*VIN(4)-DELTA.LT.VIN(6)) .OR.
      3         (ABS(VIN(5)+VIN(1)).LE.DELTA
      4            .AND. VIN(6)-DELTA.LE.0.0D0)) THEN
          M1(13) = 1
-         M1(17) = INT(-dsign(1.0D0,VIN(5)))
-         M1(24) = M1(17)
-         M1(25) = 2*M1(17)
+         M1(22) = -1
+         M1(25) = 2
+         IF(VIN(5).LE.DELTA) THEN
+           M1(17) = 1
+           M1(24) = -1
+           M1(36) = -1
+         ELSE
+           M1(17) = -1
+           M1(29) = -1
+           M1(24) = 1
+         ENDIF
          AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
          CALL IMV6(VIN,M1,VOUT)
       ELSEIF ( (ABS(VIN(6)-VIN(1)).LE.DELTA
-     2            .AND. 2.0D0*VIN(4)+DELTA.LT.VIN(5)) .OR.
+     2            .AND. 2.0D0*VIN(4)-DELTA.LT.VIN(5)) .OR.
      3         (ABS(VIN(6)+VIN(1)).LE.DELTA
      4            .AND. VIN(5)-DELTA.LE.0.0D0)) THEN
-         M1(7) = 1
-         M1(12) = INT(-dsign(1.0D0,VIN(6)))
-         M1(23) = M1(12)
-         M1(31) = 2*M1(12)
+         M1(7) =1
+         M1(31) = 2
+         M1(22) = -1
+         IF(VIN(6).LE.DELTA) THEN
+           M1(12) = 1
+           M1(23) = -1
+           M1(29) = -1
+         ELSE
+           M1(12) = 1
+           M1(23) = 1
+           M1(36) = -1
+         ENDIF
          AGAIN = .TRUE.
          CALL IMIM6(M1,M,M2)
          CALL ICPYVN (36,M2,M)
