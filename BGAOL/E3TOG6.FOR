@@ -163,7 +163,7 @@ C         write (*,*) ' bits,signs ',bits,signs
          if (t1 .eq. 0.0) go to 5500
  5000 continue
  5500 continue
-      write (*,*) ' t1 ',t1,t1min,bitmin
+C      write (*,*) ' t1 ',t1,t1min,bitmin
       if (t1 .ne. 0.0) then
          call btos (9,bitmin,signs)
          do 6000 l=1,9

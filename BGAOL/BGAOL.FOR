@@ -191,7 +191,7 @@ C**********************************************************************C
       integer DegreesofFreedom
       logical DEBUG, DEBUGD
 
-      real*8 dbest, dcurr, dtemp
+      real*8 dbest, dcurr, dtemp, dof
 
       PARAMETER (NVMAX=20000)
       PARAMETER (MXTREE=11*NVMAX)
@@ -287,7 +287,7 @@ C----------------------------------------------------------------------C
          endif
          CALL WRSIZE (SIZE,ERRSIZ,RATIO,'WRSIZE')
          CALL MKPRIM (LATSYM,G,MPRIM,GOUT,'MKPRIM')
-         WRITE (*,*) ' AFTER MKPRIM'
+C         WRITE (*,*) ' AFTER MKPRIM'
          CALL dg6toe3(MPRIM,M3RED)
          IF (DEBUGD) THEN
            WRITE (*,*) "g6 Centering Matrix:"
@@ -326,8 +326,8 @@ C----------------------------------------------------------------------C
          WRITE (*,*) TITLE
          WRITE (*,'('' REDUCED CELL  '')')
          endif
-         WRITE (*,'('' Red. Cell   '',6F11.4)')CRED
-         WRITE (*,'('' Red. Vector '',6F10.5)') GRED
+         call wlabv6(' Red. Cell   ',CRED)
+         call wlabv6(' Red. Vector ',GRED)
          if (DEBUGD) THEN
          WRITE (*,*) "G6 Reduction Matrix:"
          WRITE (*,'(12x,6I6)') MRED
@@ -460,11 +460,13 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      3            HTMLSTR(1:LHTMLSTR),I,IABS(ITDESG(I)),
      4            sprefix,"REDUCED ",CHRLAT(I), TITLE
                ENDIF
-               WRITE (*,'(6X,F5.1,1X,F5.2,3H V=,6F8.1)')
-     2             BEST(I),
-     3             BEST(I)/ERRSIZ,VBEST
+               WRITE (*,'(6X,a,F5.1,1X,a,F5.2)')
+     *             "G6 Distance: ",
+     2             BEST(I), " G6 Distance/Error: ",
+     3             BEST(I)/ERRSIZ
+               call WLABV6("        V=",VBEST)
                CALL G6TOC (VBEST,COUT,'G6TOC ')
-               WRITE (*,'(6X,''cell'',8X,2(3F8.2,'' ''))') COUT
+               call WLABV6("      cell",COUT)
 
                call cpyvn(6,TG,VOUT(1,I))
                WRITE (*,*)
@@ -472,28 +474,26 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
      *             NewCell(1,I) )
                call CalculateCenteredCell( NewCell(1,I),
      *             CenteredCell(1,I) )
-               write(*,"(8H G6 cell, 6F9.3)" )
-     *             (NewCell(JJ,I),JJ=1,6)
-               write(*,"(8H E3 cell, 6F9.3)" )
-     *             (CenteredCell(JJ,I),JJ=1,6)
+               call WLABV6(' G6 cell',NewCell(1,I))
+               call WLABV6(' E3 cell',CenteredCell(1,I))
 
                call Primitive2CenteredMatrix( IABS(ITDESG(I)), matrix3 )
+               dof = DBLE(DegreesofFreedom(ITDESG(I)))
                WRITE (*,"(a,1h[,3i3,1h/,3i3,1h/,3i3,1h])")
      *          " Primitive to Centered Matrix: ",
      *          (int(matrix3(imat)),imat=1,9)
                WRITE (*,"(2(1x,a,f8.2,4x,a,f8.2/))") 
      *           " G6 DF-weighted distance: ",
-     *              DSQRT(DBLE(DegreesofFreedom(ITDESG(I))))*
-     *              BEST(I),
-     *           " E3 % absolute distance:    ",
-     *              DSQRT(
-     *              DBLE(DegreesofFreedom(ITDESG(I)))*
-     *              BEST(I)/6.)/2.,
-     *           " G6 angular Z-score:    ",
-     *              datan2(BEST(I),
-     *                max(0.D0,dabs(size**2-BEST(I)**2)))
+     *              DSQRT(dof)*BEST(I),
+     *           " E3 distance (Angstroms): ",
+     *              DSQRT(dof*BEST(I)/6.)/2.,
+     *           " G6 angular Z-score:      ",
+     *              datan2(DSQRT(dof)*BEST(I),
+     *                dsqrt(max(0.D0,
+     *                dabs(size**2-dof*BEST(I)**2))))
      *              /datan2(ERRSIZ,
-     *                max(0.D0,dabs(size**2-ERRSIZ**2))) 
+     *                dsqrt(max(0.D0,
+     *                dabs(size**2-ERRSIZ**2)))) 
                write(*,*) 
             ELSE
                BEST(I) = -19191
@@ -573,39 +573,79 @@ C              write(*,*)"DCURR, VDIST",IV,DCURR,VDIST(IV)
              HTMLEND = "</a>"
              LHTMLEND = 4
            endif
+           dof = DBLE(DegreesofFreedom(ITDESG(IORD(I))))
+           if (BEST(IORD(I)).GT.2499.9989D0 .OR.
+     *       CenteredCell(1,IORD(I)).GT.99999.9989D0 .OR.
+     *       CenteredCell(2,IORD(I)).GT.99999.9989D0 .OR.
+     *       CenteredCell(3,IORD(I)).GT.99999.9989D0)
+     *     THEN
            if (ITDESG(IORD(I)).GT.0) then
            WRITE(*, "(a,3HIT(, I3, 1H),a,4H +++,1X,A4,
-     *        8HREDUCED ,A2, 1x, F8.3,3x,6F9.3,2x,3F9.3)" )
+     *        8HREDUCED ,A2, 1x, G8.3,2x,3(1x,G9.3),
+     *        3F9.3,2x,3F9.3)")
      *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
      *        HTMLEND(1:LHTMLEND), sprefix,
      *        CHRLAT(IORD(I)), BEST(IORD(I)),
      *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
-     *        DSQRT(
-     *        DBLE(DegreesofFreedom(ITDESG(IORD(I)))))*
-     *        BEST(IORD(I)),
-     *        DSQRT(
-     *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
-     *        BEST(IORD(I))/6.)/2.,
-     *        datan2(BEST(IORD(I)),size)
-     *              /datan2(ERRSIZ,size) 
+     *        DSQRT(dof)*BEST(IORD(I)),
+     *        DSQRT(dof*BEST(IORD(I))/6.)/2.,
+     *        datan2(dsqrt(dof)*BEST(IORD(I)),
+     *          dsqrt(max(0.d0,
+     *          size**2-dof*BEST(IORD(I))**2)))
+     *        /datan2(ERRSIZ,
+     *          dsqrt(max(0.d0,
+     *          size**2-ERRSIZ**2))) 
            else
            WRITE(*, "(a,3HIT(, I3, 1H),a,4H ---,1X,A4,
-     *        8HREDUCED ,A2, 1x, F8.3,3x,6F9.3,2x,3F9.3)" )
+     *        8HREDUCED ,A2, 1x, G8.3,2x,3(1x,G9.3),
+     *        3F9.3,2x,3F9.3)")
      *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
      *        HTMLEND(1:LHTMLEND), sprefix,
      *        CHRLAT(IORD(I)), BEST(IORD(I)),
      *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
-     *        DSQRT(
-     *        DBLE(DegreesofFreedom(ITDESG(IORD(I)))))*
-     *        BEST(IORD(I)),
-     *        DSQRT(
-     *        DBLE(DegreesofFreedom(ITDESG(IORD(I))))*
-     *        BEST(IORD(I))/6.)/2.,
-     *        datan2(BEST(IORD(I)),
-     *          dsqrt(max(0.D0,size**2-BEST(IORD(I))**2)))
+     *        DSQRT(dof)*BEST(IORD(I)),
+     *        DSQRT(dof*BEST(IORD(I))/6.)/2.,
+     *        datan2(dsqrt(dof)*BEST(IORD(I)),
+     *          dsqrt(max(0.d0,
+     *          size**2-dof*BEST(IORD(I))**2)))
      *        /datan2(ERRSIZ,
-     *          dsqrt(max(0.D0,size**2-ERRSIZ**2)))
-
+     *          dsqrt(max(0.d0,
+     *          size**2-ERRSIZ**2))) 
+           endif
+           ELSE
+           if (ITDESG(IORD(I)).GT.0) then
+           WRITE(*, "(a,3HIT(, I3, 1H),a,4H +++,1X,A4,
+     *        8HREDUCED ,A2, 1x, F8.3,2x,3(1x,F9.3),
+     *        3F9.3,2x,3F9.3)")
+     *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
+     *        HTMLEND(1:LHTMLEND), sprefix,
+     *        CHRLAT(IORD(I)), BEST(IORD(I)),
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
+     *        DSQRT(dof)*BEST(IORD(I)),
+     *        DSQRT(dof*BEST(IORD(I))/6.)/2.,
+     *        datan2(dsqrt(dof)*BEST(IORD(I)),
+     *          dsqrt(max(0.d0,
+     *          size**2-dof*BEST(IORD(I))**2)))
+     *        /datan2(ERRSIZ,
+     *          dsqrt(max(0.d0,
+     *          size**2-ERRSIZ**2))) 
+           else
+           WRITE(*, "(a,3HIT(, I3, 1H),a,4H ---,1X,A4,
+     *        8HREDUCED ,A2, 1x, F8.3,2x,3(1x,F9.3),
+     *        3F9.3,2x,3F9.3)")
+     *        HTMLSTR(1:LHTMLSTR), IABS(ITDESG(IORD(I))),
+     *        HTMLEND(1:LHTMLEND), sprefix,
+     *        CHRLAT(IORD(I)), BEST(IORD(I)),
+     *        (CenteredCell(JJ,IORD(I)),JJ=1,6),
+     *        DSQRT(dof)*BEST(IORD(I)),
+     *        DSQRT(dof*BEST(IORD(I))/6.)/2.,
+     *        datan2(dsqrt(dof)*BEST(IORD(I)),
+     *          dsqrt(max(0.d0,
+     *          size**2-dof*BEST(IORD(I))**2)))
+     *        /datan2(ERRSIZ,
+     *          dsqrt(max(0.d0,
+     *          size**2-ERRSIZ**2))) 
+           endif
            endif
            bandcount = bandcount+1
          ENDIF
@@ -635,8 +675,8 @@ C**********************************************************************C
      *  1,2,1,2,1,2,2,3,2,4,
      *  2,2,3,4,2,3,4,2,3,4,
      *  2,2,3,2,4,3,4,4,4,4,
-     *  5,3,4,4,4,3,4,3,4,3,
-     *  4,3,4,5/
+     *  6,3,4,4,4,3,4,3,4,3,
+     *  4,3,4,6/
        DegreesofFreedom = idf(max(1,min(iabs(ITDESG),44)))
        return
        end
@@ -1426,8 +1466,10 @@ C**********************************************************************C
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       real*8 C(6),CE(6)
+      real*8 CX(6),CXE(6)
       CHARACTER *6 TEST
       integer i
+      logical bigc, bigcerr
       real*8 sum
 C----------------------------------------------------------------------C
       IF (TEST .NE. 'WRCELL') THEN
@@ -1436,18 +1478,56 @@ C----------------------------------------------------------------------C
       ENDIF
 
       SUM = 0.0
+      bigc = .false.
+      bigcerr = .false.
       DO 1000 I=1,6
- 1000 SUM = SUM + CE(I)
+      if (C(I).gt.999999.9989D0) bigc=.true.
+      if (C(I).lt.-99999.9989D0) bigc=.true.
+      if (CE(I).gt.  999.9989D0) bigcerr=.true.
+      if (CE(I).lt.  -99.9989D0) bigcerr=.true.
+      CX(I) = C(I)
+      CXE(I) = DABS(CE(I))
+      if (DABS(CX(I)).LT.1.D-11)CX(I)=0.D0
+      if (DABS(CXE(I)).LT.1.D-11)CXE(I)=0.D0
+ 1000 SUM = SUM + DABS(CE(I))
 
       IF (SUM .EQ. 0) THEN
-         WRITE (*,'(1X,6F10.3)') C
+        if (bigc) then
+          WRITE (*,'(6(1X,G12.3))') CX
+        else
+          WRITE (*,'(1X,6F12.3)') CX
+        endif
       ELSE
          DO 3000 I=1,6
-            IF (CE(I) .GT. 0.0) THEN
-               WRITE (*,'(1X,F10.3,2X,F7.3)') C(I),CE(I)
-            ELSE
-               WRITE (*,'(1X,F10.3,2X,F7.3)') C(I)
-            ENDIF
+         if (bigc) then
+           if (bigcerr) then
+             IF (CXE(I) .GT. 0.0) THEN
+               WRITE (*,'(1X,G12.3,2X,G9.3)') CX(I),CXE(I)
+             ELSE
+               WRITE (*,'(1X,G12.3)') CX(I)
+             ENDIF
+           else
+             IF (CXE(I) .GT. 0.0) THEN
+               WRITE (*,'(1X,G12.3,2X,F9.3)') CX(I),CXE(I)
+             ELSE
+               WRITE (*,'(1X,G12.3)') CX(I)
+             ENDIF
+           endif
+         else
+           if (bigcerr) then
+             IF (CXE(I) .GT. 0.0) THEN
+               WRITE (*,'(1X,F12.3,2X,G9.3)') CX(I),CXE(I)
+             ELSE
+               WRITE (*,'(1X,F12.3)') CX(I)
+             ENDIF
+           else
+             IF (CE(I) .GT. 0.0) THEN
+               WRITE (*,'(1X,F12.3,2X,F9.3)') CX(I),CXE(I)
+             ELSE
+               WRITE (*,'(1X,F12.3)') CX(I)
+             ENDIF
+           endif
+         endif
  3000    CONTINUE
       ENDIF
       WRITE (*,*)
@@ -1614,11 +1694,11 @@ C----------------------------------------------------------------------C
       READ (*,*, END=9000) CV
       INPCEL = OKCELL(LATSYM,CV)
       IF (.NOT. INPCEL) GO TO 1000
-      WRITE (*,*) CV
+      CALL WLABV6(" ",CV)
 
       WRITE (*,"(a,$)") ' Standard Deviations of Cell Parameters: '
       READ (*,*, END=9000) CE
-      WRITE (*,*) CE
+      CALL WLABV6(" ",CE)
 
       if (MODEC.ne.'I' .and. MODEC.ne.'i'
      *   .and. MODEC.ne.'B' .and. MODEC.ne.'b' .and. MODEC.ne.' ') THEN
@@ -1741,6 +1821,7 @@ C**********************************************************************C
       real*8 V(6),VE(6)
       CHARACTER *6 TEST
       integer i
+      logical bigv, bigverr
       real*8 sum
 C----------------------------------------------------------------------C
 
@@ -1750,18 +1831,82 @@ C----------------------------------------------------------------------C
       ENDIF
 
       SUM = 0.0
+      bigv = .false.
+      bigverr = .false.
       DO 1000 I=1,6
+      if (V(I).gt.999999999.9989D0) bigv=.true.
+      if (V(I).lt.-99999999.9989D0) bigv=.true.
+      if (VE(I).gt. 9999999.9989D0) bigverr=.true.
+      if (VE(I).lt.-9999999.9989D0) bigverr=.true.
  1000 SUM = SUM + ABS(VE(I))
 
       IF (SUM .EQ. 0D0) THEN
-         WRITE (*,'(1X,6F12.2)') V
+         if (bigv) then
+           WRITE (*,'(1X,6G13.3)') V
+         else
+           WRITE (*,'(1X,6F13.3)') V
+         endif
       ELSE
          DO 3000 I=1,6
-            WRITE (*,'(1X,F13.3,3X,F11.3)') V(I),VE(I)
+         if (bigv) THEN
+           if (bigverr) THEN
+             WRITE (*,'(1X,G13.3,3X,G11.3)') V(I),VE(I)
+           else
+             WRITE (*,'(1X,G13.3,3X,F11.3)') V(I),VE(I)
+           endif
+         else
+           if (bigverr) THEN
+             WRITE (*,'(1X,F13.3,3X,G11.3)') V(I),VE(I)
+           else
+             WRITE (*,'(1X,F13.3,3X,F11.3)') V(I),VE(I)
+           endif
+         endif
  3000    CONTINUE
       ENDIF
       WRITE (*,*)
       END
+
+C**********************************************************************C
+      integer function nblen(string)
+      implicit none
+      character*(*) string
+      integer i
+      NBLEN = len(string)
+      do i = len(string),2,-1
+      if (string(i:i).ne.' '.and.
+     *  string(i:i).ne.char(9)) RETURN
+      NBLEN = NBLEN-1
+      enddo
+      NBLEN = 1
+      end
+
+
+C**********************************************************************C
+      SUBROUTINE WLABV6 (label,vec)
+      implicit none
+      character*(*)label
+      character*160 buffer
+      real*8 vec(6),xvec(6)
+      integer i,nblen
+      do i = 1,6
+        xvec(i) = vec(i)
+        if (dabs(xvec(i)).lt.5.D-5) xvec(i) = 0.D0
+      enddo
+      do i = 1,6
+        if (vec(i).gt.9999.9989D0) go to 100
+        if (vec(i).lt.-999.9989D0) go to 100
+      enddo
+      write(buffer,'(a,3(1x,F8.3),2x,3(1x,F8.3))',
+     *  err=100)
+     *  label,xvec
+      write(*,'(a)')buffer(1:nblen(buffer))
+      return
+ 100  write(buffer,'(a,3(1x,G12.3),2x,3(1x,G12.3))')
+     *  label,xvec
+      write(*,'(a)')buffer(1:nblen(buffer))
+      end
+
+      
 
 C**********************************************************************C
       SUBROUTINE WRSIZE (SIZE,ERRSIZ,RATIO,TEST)
@@ -1775,7 +1920,8 @@ C----------------------------------------------------------------------C
          WRITE (*,*) ' TEST WAS WRONG IN WRSIZE'
          STOP
       ENDIF
-      WRITE (*,'('' INPUT VECTOR SIZE AND ERROR AND RATIO '',3F10.2)')
+      WRITE (*,'('' INPUT VECTOR SIZE AND ERROR AND RATIO '',
+     *  3(1X,G12.2))')
      2  SIZE,ERRSIZ,RATIO
       END
 

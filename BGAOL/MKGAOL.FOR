@@ -468,8 +468,11 @@ C     Generate seed points on each of the 15 boundaries
       gerr = DSQRT(XDOTVN(6,GRED,GRED))*RATIO
       DMIN = min(0.05,0.1*DSQRT(XDOTVN(6,GRED,GRED))*RATIO)
       grmin = gred(1)**2+gred(2)**2+gred(3)**2
-      WRITE (*,*) ' DMIN IN MKGOAL ',DMIN
-      
+      if (DMIN.GT.999999999.9989D0) THEN
+        WRITE (*,'(a,G13.3)') ' DMIN IN MKGOAL ',DMIN
+      else
+        WRITE (*,'(a,F13.3)') ' DMIN IN MKGOAL ',DMIN
+      endif      
 C     Populate the tree with the original cell and
 C     the nearby neighbors on the boundary
       NV = NV+1

@@ -59,5 +59,5 @@ echo "<hr />"
 echo ''`<p><center>''`
 echo ''`| <a href="#results">GO TO RESULTS</a>''`
 echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center><p>''`
-echo "</font>
+echo "</font>"
 echo "</body>"'
