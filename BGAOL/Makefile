@@ -45,7 +45,7 @@ HTDOCSEXT   ?=   /bgaol
 #
 #  Default compile flag definition to select debug mode under unix
 #FFLAGS	=	-g
-FFLAGS	=	-O
+FFLAGS	?=	-O
 #
 #  For IBM AIX xlf compilation with full optimization try this
 #FFLAGS	=	-O3 -qstrict
@@ -100,7 +100,7 @@ edit:
 		@/bin/echo "HTDOCS  -------- currently:" $(HTDOCS)
 		@/bin/echo "CGIPATH  ------- currently:" $(CGIPATH)
 		@/bin/echo "FC  ------------ currently:" $(FC)
-		@/bin/echo "FFLAGS  -------- currently:" $(FLAGS)
+		@/bin/echo "FFLAGS  -------- currently:" $(FFLAGS)
 		@/bin/echo ""
 		@/bin/echo "**************************************"
 		@/bin/echo "* Then:                              *"

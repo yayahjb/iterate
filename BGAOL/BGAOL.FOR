@@ -1110,7 +1110,7 @@ C**********************************************************************C
       data (matrix3D(i,14), i=1,9) /1, 1, 0, -1, 1, 0, 0, 0, 1 /
       data (matrix3D(i,15), i=1,9) /1, 0, 0, 0, 1, 0, 1, 1, 2 /
       data (matrix3D(i,16), i=1,9) /1, -1, 0, 1, 1, 2, -1, -1, 0 /
-      data (matrix3D(i,17), i=1,9) /0, 1, 1, 1, 1, 0, 1, 0, 1 /
+      data (matrix3D(i,17), i=1,9) /-1, 0, -1, -1, -1, 0, 0, 1, 1 /
       data (matrix3D(i,18), i=1,9) /0, -1, 1, 1, -1, -1, 1, 0, 0 /
       data (matrix3D(i,19), i=1,9) /-1, 0, 0, -1, 1, 1, 0, -1, 1 /
       data (matrix3D(i,20), i=1,9) /0, 1, 1, 0, 1, -1, -1, 0, 0 /
@@ -1156,6 +1156,7 @@ C**********************************************************************C
       logical INORD
       real*8 DIST(NDIST)
       integer DegreesofFreedom
+      integer npass
       do II = 1, NDIST
         IORD(II) = II
       enddo
@@ -1183,6 +1184,7 @@ C     sort all elements .gt. ERRSIZ
       IGAP = NDIST+1
  1000 IGAP = IGAP/2
       if (IGAP .le. 0) return
+      npass=0
  2000 continue
       INORD = .true.
       do II = 1, NDIST-IGAP, IGAP
@@ -1191,15 +1193,16 @@ C     sort all elements .gt. ERRSIZ
         DFCORR1 = DSQRT(
      *  DBLE(DegreesofFreedom(ITDESG(IORD(II+IGAP)))))
       if (DIST(IORD(II))*DFCORR .gt.
-     *   DIST(IORD(II+IGAP))*DFCORR1
-     *  .AND. DIST(IORD(II))*DFCORR .gt. ERRSIZ) then
+     *   DIST(IORD(II+IGAP))*DFCORR1+1.D-8
+     *  .AND. DIST(IORD(II))*DFCORR .gt. ERRSIZ+1.D-8) then
         ITEMP = IORD(II)
         IORD(II) = IORD(II+IGAP)
         IORD(II+IGAP) = ITEMP
         INORD = .false.
       endif
       enddo
-      if (.not. INORD) go to 2000
+      npass = npass+1
+      if (.not. INORD .and. npass .lt. NDIST**2) go to 2000
       go to 1000
       return
       end
@@ -3155,7 +3158,7 @@ C**********************************************************************C
 
 
       data ngtype(41) /-17/
-      data lattyp(41) /'mC'/
+      data lattyp(41) /'mI'/
       data pjnorm(41) /10D0/
       data (projct(i,41),i=1,36) /
      1  3, 3, 0,-2,-2,-2,

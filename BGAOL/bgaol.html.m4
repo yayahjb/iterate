@@ -432,50 +432,45 @@ subspace of those polytopes is just $g_4 = g_5 = g_6 = 0$ which is part of the (
 <tr><td>45E</td><td>18</td><td>$tI$</td><td>$(r,s,s,r/2,r,r)$</td><td>$2ADA''`  = 
 2{{A&#8598;\text''`^''`}}D$</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>55A</td><td>10</td><td>$mC$</td><td>$(r,r,s,t,t,u)$</td><td>$11''` 
-= {1&#8598;\text''`^''`}$</td></tr>
+<td>57B</td><td>17</td><td>$mI$</td><td>$(r,r,s,-t,-u,-2r+t+u)$</td><td>1F</td></tr>
 <tr><td>48A</td><td>12</td><td>$hP$</td><td>$(r,r,s,0,0,-r)$</td><td>134E</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>55A</td><td>14</td><td>$mC$</td><td>$(r,r,s,t,t,u)$</td><td>$11''` = 
-{1&#8598;\text''`^''`}$</td></tr>
+<td>57C</td><td>27</td><td>$mI$</td><td>$(r,s,t,u,r,r)$</td><td>9C = AD</td></tr>
 <tr><td>48B</td><td>22</td><td>$hP$</td><td>$(r,s,s,-s,0,0)$</td><td>2458</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>57B</td><td>17</td><td>$mC$</td><td>$(r,r,s,-t,-u,-2r+t+u)$</td><td>1F</td></tr>
-<tr><td>49C</td><td>2</td><td>$hR$</td><td>$(r,r,r,s,s,s)$</td><td>$121''`2''` = 
-{1&#8598;\text''`^''`}{2&#8598;\text''`^''`}$</td>
+<td>57A</td><td>43</td><td>$mI$</td><td>$(r,s,t,-s+u,-r+u,-2u)$</td><td>$FF''` = {F&#8598;\text''`^''`}$</td></tr>
+<tr><td>49C</td><td>2</td><td>$hR$</td><td>$(r,r,r,s,s,s)$</td><td>$121''`2''` = {1&#8598;\text''`^''`}{2&#8598;\text''`^''`}$</td>
+<td bgcolor="#8080FF" width="1"></td>
+<td>55A</td><td>10</td><td>$mC$</td><td>$(r,r,s,t,t,u)$</td><td>$11''` = {1&#8598;\text''`^''`}$</td></tr>
+<tr><td>49D</td><td>4</td><td>$hR$</td><td>$(r,r,r,-s,-s,-s)$</td><td>$121''`2''` = {1&#8598;\text''`^''`}{2&#8598;\text''`^''`}$</td>
+<td bgcolor="#8080FF" width="1"></td>
+<td>55A</td><td>14</td><td>$mC$</td><td>$(r,r,s,-t,-t,-u)$</td><td>$11''` = {1&#8598;\text''`^''`}$</td></tr>
+<tr><td>49B</td><td>9</td><td>$hR$</td><td>$(r,r,s,r,r,r)$</td><td>1679ACD</td>
 <td bgcolor="#8080FF" width="1"></td>
 <td>55B</td><td>20</td><td>$mC$</td><td>$(r,s,s,t,u,u)$</td><td>$22''` = 
 {2&#8598;\text''`^''`}$</td></tr>
-<tr><td>49D</td><td>4</td><td>$hR$</td><td>$(r,r,r,-s,-s,-s)$</td><td>$121''`2''` = {1&#8598;\text''`^''`}{2&#8598;\text''`^''`}$</td>
+<tr><td>49E</td><td>24</td><td>$hR$</td><td>$(r,s,s,-s+r/3,-2r/3,-2r/3)$</td><td>$2F2''`F''` = {2&#8598;\text''`^''`}{F&#8598;\text''`^''`}$</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>55B</td><td>25</td><td>$mC$</td><td>$(r,s,s,t,u,u)$</td><td>$22''` = 
+<td>55B</td><td>25</td><td>$mC$</td><td>$(r,s,s,-t,-u,-u)$</td><td>$22''` = 
 {2&#8598;\text''`^''`}$</td></tr>
-<tr><td>49B</td><td>9</td><td>$hR$</td><td>$(r,r,s,r,r,r)$</td><td>1679ACD</td>
-<td bgcolor="#8080FF" width="1"></td>
-<td>57C</td><td>27</td><td>$mC$</td><td>$(r,s,t,u,r,r)$</td><td>9C = AD</td></tr>
-<tr><td>49E</td><td>24</td><td>$hR$</td><td>$(r,s,s,-s+r/3,-2r/3,-2r/3)$</td><td>$2F2''`F''` = {2&#8598;\text''`^''`}{F&#8598;\text''`^''`}$
-</td>
+<tr><td>50C</td><td>32</td><td>$oP$</td><td>$(r,s,t,0,0,0)$</td><td>$345 = {3&#8598;\text''`^''`} = {4&#8598;\text''`^''`} = {5&#8598;\text''`^''`}$</td>
 <td bgcolor="#8080FF" width="1"></td>
 <td>56A</td><td>28</td><td>$mC$</td><td>$(r,s,t,u,r,2u)$</td><td>$AA''` = {A&#8598;\text''`^''`}$</td></tr>
-<tr>
-<td>50C</td><td>32</td><td>$oP$</td><td>$(r,s,t,0,0,0)$</td><td>$345 = {3&#8598;\text''`^''`} = {4&#8598;\text''`^''`} = {5&#8598;\text''`^''`}$</td>
-<td bgcolor="#8080FF" width="1"></td>
-<td>56C</td><td>29</td><td>$mC$</td><td>$(r,s,t,u,2u,r)$</td><td>$DD''` = {D&#8598;\text''`^''`}$</td></tr>
 <tr><td>50D</td><td>13</td><td>$oC$</td><td>$(r,r,s,0,0,-t)$</td><td>134</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>56B</td><td>30</td><td>$mC$</td><td>$(r,s,t,s,u,2u)$</td><td>$77''` =  {7&#8598;\text''`^''`}$</td></tr>
+<td>56C</td><td>29</td><td>$mC$</td><td>$(r,s,t,u,2u,r)$</td><td>$DD''` = {D&#8598;\text''`^''`}$</td></tr>
 <tr><td>50E</td><td>23</td><td>$oC$</td><td>$(r,s,s,-t,0,0)$</td><td>245</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>54C</td><td>37</td><td>$mC$</td><td>$(r,s,t,-u,-r,0)$</td><td>5B</td></tr>
+<td>56B</td><td>30</td><td>$mC$</td><td>$(r,s,t,s,u,2u)$</td><td>$77''` =  {7&#8598;\text''`^''`}$</td></tr>
 <tr><td>50A</td><td>36</td><td>$oC$</td><td>$(r,s,t,0,-r,0)$</td><td>35B</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>54A</td><td>39</td><td>$mC$</td><td>$(r,s,t,-u,0,-r)$</td><td>4E</td></tr>
+<td>54C</td><td>37</td><td>$mC$</td><td>$(r,s,t,-u,-r,0)$</td><td>5B</td></tr>
 <tr><td>50B</td><td>38</td><td>$oC$</td><td>$(r,s,t,0,0,-r)$</td><td>34E</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>54B</td><td>41</td><td>$mC$</td><td>$(r,s,t,-s,-u,0)$</td><td>58</td></tr>
+<td>54A</td><td>39</td><td>$mC$</td><td>$(r,s,t,-u,0,-r)$</td><td>4E</td></tr>
 <tr><td>50F</td><td>40</td><td>$oC$</td><td>$(r,s,t,-s,0,0)$</td><td>458</td>
 <td bgcolor="#8080FF" width="1"></td>
-<td>57A</td><td>43</td><td>$mC$</td><td>$(r,s,t,-s+u,-r+u,-2u)$</td><td>$FF''` = {F&#8598;\text''`^''`}$</td></tr>
+<td>54B</td><td>41</td><td>$mC$</td><td>$(r,s,t,-s,-u,0)$</td><td>58</td></tr>
 </table>
 </center>
 
