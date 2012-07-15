@@ -2306,7 +2306,7 @@ C     Convert to standard presentation, M is the matrix
            M1(23) = -1
            M1(29) = -1
          ELSE
-           M1(12) = 1
+           M1(12) = -1
            M1(23) = 1
            M1(36) = -1
          ENDIF
@@ -2954,7 +2954,7 @@ C**********************************************************************C
 
 
       data ngtype(24) /-8/
-      data lattyp(24) /'oF'/
+      data lattyp(24) /'oI'/
       data pjnorm(24) /13D0/
       data (projct(i,24),i=1,36) /
      1  3, 3, 3,-2,-2,-2,
