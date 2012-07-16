@@ -69,7 +69,7 @@ MATHSCRIBEURL = http://$(HTTPDSERVER)$(HTDOCSEXT)/$(MATHSCRIBEPATH)
 #
 # BGAOL URLS
 #
-BGAOLVERSION = 1.0
+BGAOLVERSION = 1.0.1
 BGAOLTARBALLURL = http://downloads.sf.net/iterate/bgaol-$(BGAOLVERSION).tar.gz
 BGAOLZIPURL = http://downloads.sf.net/iterate/bgaol-$(BGAOLVERSION).zip
 
