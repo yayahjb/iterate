@@ -1542,12 +1542,12 @@ C**********************************************************************C
       integer iunit0,iunit1,iunit2,iunit3,iunit10
       common /files/ iunit0,iunit1,iunit2,iunit3,iunit10
       integer nlatt, i
-      PARAMETER (NLATT=16)
+      PARAMETER (NLATT=18)
       CHARACTER *1 SYMLST(NLATT)
       CHARACTER *1 LATSYM
       real*8 CV(6), V(6)
-      DATA SYMLST /'P','A','B','C','I','F','R','V',
-     2             'p','a','b','c','i','f','r','v'/
+      DATA SYMLST /'P','A','B','C','I','F','R','H','V',
+     2             'p','a','b','c','i','f','r','h','v'/
 C----------------------------------------------------------------------C
       OKCELL = .TRUE.
 
