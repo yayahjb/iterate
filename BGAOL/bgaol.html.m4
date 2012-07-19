@@ -366,7 +366,7 @@ subspace of those polytopes is just $g_4 = g_5 = g_6 = 0$ which is part of the (
 <center>
 <table border=2>
 <tr><th>Class</th><th colspan=2>Boundary</th><th>Condition</th><th>Special-Position Subspace</th></tr>
-<tr><td rowspan=2>Equal cell edges</td><td>1</td><td>all</td><td>$g_1 = g_2$</td><td>$g_4 = g_5</td></tr>
+<tr><td rowspan=2>Equal cell edges</td><td>1</td><td>all</td><td>$g_1 = g_2$</td><td>$g_4 = g_5$</td></tr>
 <tr><td>2</td><td>all</td><td>$g_2 = g_3$</td><td>$g_5 = g_6$</td></tr>
 <tr><td rowspan=3>Ninety degrees</td><td>3</td><td>all</td><td>$g_4 = 0$</td><td>$g_5 = g_6 = 0$</td></tr>
 <tr><td>4</td><td>all</td><td>$g_5 = 0$</td><td>$g_4 = g_6 = 0$</td></tr>
