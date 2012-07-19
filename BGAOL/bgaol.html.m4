@@ -374,10 +374,10 @@ subspace of those polytopes is just $g_4 = g_5 = g_6 = 0$ which is part of the (
 <tr><td rowspan=9>Face diagonal</td><td>6</td><td>+ + +</td><td>$g_2 = g_4 $ and $ g_5 \html''`&ge;''`  g_6$</td><td>(none)</td></tr>
 <tr><td>7</td><td>+ + +</td><td>$g_2 = g_4 $ and $ g_5 <  g_6$</td><td>$g_5 = g_6/2$</td></tr>
 <tr><td>8</td><td>- - -</td><td>$g_2 = -g_4$</td><td>(none)</td></tr>
-<tr><td>9</td><td>+ + +</td><td>$g_1 = g_5 $ and $ g_4 \geqslant  g_6$</td><td>(none)</td></tr>
+<tr><td>9</td><td>+ + +</td><td>$g_1 = g_5 $ and $ g_4 \html''`&ge;''`  g_6$</td><td>(none)</td></tr>
 <tr><td>A</td><td>+ + +</td><td>$g_1 = g_5 $ and $ g_4 < g_6$</td><td>$g_4 = g_6/2$</td></tr>
 <tr><td>B</td><td>- - -</td><td>$g_1 = -g_5$</td><td>(none)</td></tr>
-<tr><td>C</td><td>+ + +</td><td>$g_1 =  g_6 $ and $ g_4 \geqslant g_5$</td><td>(none)</td></tr>
+<tr><td>C</td><td>+ + +</td><td>$g_1 =  g_6 $ and $ g_4 \html''`&ge;''` g_5$</td><td>(none)</td></tr>
 <tr><td>D</td><td>+ + +</td><td>$g_1 =  g_6 $ and $ g_4 < g_5$</td><td>$g_4 = g_5/2$</td></tr>
 <tr><td>E </td><td>- - -</td><td>$g_1 = - g_6$</td><td>(none)</td></tr>
 <tr><td>Body diagonal</td><td>F</td><td>- - -</td><td>$g_1+g_2+g_3+g_4+g_5+ g_6 = g_3$
