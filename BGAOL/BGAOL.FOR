@@ -1731,6 +1731,13 @@ C----------------------------------------------------------------------C
         IF (.NOT. COMBMODE ) MODEC = 'B'
       ENDIF
 
+      IF (LATSYM .eq. 'R' .AND.
+     *  ABS(MAX(CV(4),CV(5),CV(6))-
+     *       MIN(CV(4),CV(5),CV(6))) .LT. 20.0D0) THEN
+        LATSYM = 'P'
+        WRITE(*,*) "Treated non-hexagonal R as P"
+      ENDIF
+
       RETURN
  9000 CONTINUE
       INPCEL = .FALSE.
@@ -1998,6 +2005,7 @@ C**********************************************************************C
       CHARACTER LATSYM
       real*8 GIN(6),GOUT(6)
       real*8 M(36),M1(36)
+      real*8 GSIZE, GERR, anorm
       integer i
 C----------------------------------------------------------------------C
 
@@ -2005,6 +2013,8 @@ C----------------------------------------------------------------------C
          WRITE (*,*) ' TEST WAS WRONG IN MKPRIM'
          STOP
       ENDIF
+      GSIZE = anorm(6,GIN)
+      GERR = GSIZE*5.0D-2
       CALL ZEROS (36,M)
 
       IF (LATSYM .EQ. 'P' .OR. LATSYM .EQ. 'V') THEN
@@ -2075,7 +2085,37 @@ C----------------------------------------------------------------------C
          M(29) = 1D0
          M(31) = 1D0
          M(36) = 0.5D0
-      ELSEIF (LATSYM .EQ. 'R') THEN
+      ELSEIF (LATSYM .EQ. 'R' .OR. LATSYM .EQ. 'H') THEN
+        IF (LATSYM.EQ.'R') THEN
+C For R, as distinct from H, detect primitive R cases
+          IF (DABS(GIN(1)-GIN(2)).LT.GERR) THEN
+C           (r,r,?,?,?,?)
+            IF(DABS(GIN(4)-GIN(5)).LT.GERR
+     *        .AND. DABS(GIN(5)-GIN(6)).LT.GERR)
+     *        THEN
+C             (r,r,?,s,s,s), (r,r,?,-s,-s,-s)
+              IF (DABS(GIN(4)-GIN(1)).LT.GERR
+     *          .OR. DABS(GIN(2)-GIN(3)).LT.GERR)
+     *          THEN
+C               (r,r,s,r,r,r), (r,r,r,s,s,s), (r,r,r,-s,-s,-s)
+                CALL RUNTMN(6,M)
+                WRITE(*,*) "Treated non-hexagonal R as P"
+                GO To 3000
+              ENDIF
+            ENDIF
+          ENDIF
+          IF (DABS(GIN(2)-GIN(3)).LT.GERR)
+     *      THEN
+            IF (DABS(3.D0*GIN(5)/2.D0+GIN(1)).LT.GERR
+     *      .AND.DABS(3.D0*GIN(6)/2.D0+GIN(1)).LT.GERR
+     *      .AND.DABS(3.D0*(GIN(4)+GIN(2))-GIN(1))
+     *      .LT.GERR) THEN
+              CALL RUNTMN(6,M)
+              WRITE(*,*) "Treated non-hexagonal R as P"
+              GO To 3000
+            ENDIF
+          ENDIF
+        ENDIF
 C from Andrews and Bernstein, 1988
         M(1) = 1D0/9.0D0
         M(2) = 1D0/9.0D0
@@ -2123,6 +2163,7 @@ C from Andrews and Bernstein, 1988
          WRITE (*,*) ' DIDN-T FIND LATTICE SYMBOL ',LATSYM
          STOP
       ENDIF
+3000  CONTINUE
       CALL CPYVN(36,M,M1)
       CALL RMV6(GIN,M1,GOUT)
       END

@@ -130,6 +130,9 @@ Bravais General Analysis of Lattices (BGAOL)</H2>
 <A HREF=mailto:yaya@bernstein-plus-sons.com>yaya@bernstein-plus-sons.com</A>
 <FORM method=POST ACTION="'CGIBIN()`/bgaol.csh">
 <BR>
+<p>
+A program to determine cells &quot;close&quot; to given cell to help find the Bravais 
+lattice of highest symmetry consistent with the submitted cell.
 <P>
 <STRONG>
 Please read the <a href="#notice">NOTICE</a> below before use of this web page
@@ -156,8 +159,8 @@ lattice centering:</th>
 <option value="C"> C (c-centered)
 <option value="F"> F (all-faces-centered)
 <option value="I"> I (body-centered)
-<option value="R"> R (rhombohedral-obverse)
-<option value="H"> H (hexagonal primitive)
+<option value="R"> R (rhombohedral as hexagonal)
+<option value="H"> H (hexagonal)
 <option value="V"> (raw g6 vector)
 </SELECT>
 </td>
@@ -293,7 +296,7 @@ or a
 <a name="background"></a>
 <h2>Background</h2> <p>
 
-BGAOL is an updated version of the program ITERATE that finds cells that are "close" to the cell given, in 
+BGAOL is an updated version of the program ITERATE that finds cells that are &quot;close&quot; to the cell given, in 
 order to help find the Bravais lattice of highest symmetry consistent with the submitted cell. A central 
 problem in the solution of every crystal structure is to determine the correct Bravais lattice of the 
 crystal. Many methods have been described for finding the correct Bravais lattice.  ITERATE is based on 
@@ -559,6 +562,8 @@ determination of a unique conventional cell. Zeitschrift fu r Kristallographie, 
 |
 </center>
 
+<hr>
+Updated 18 July 2012.
 </body>
 </html>
 '
