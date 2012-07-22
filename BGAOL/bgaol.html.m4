@@ -109,6 +109,7 @@ WWW <b>G<sup>6</sup></b> Bravais Lattice Determination
 </TITLE> 
 </HEAD> 
 <BODY>
+<font face="Arial,Helvetica,Times" size="3">
 <center>
 | <a href="#search">Search</a>
 | <a href="#source">Source</a>
@@ -120,28 +121,25 @@ WWW <b>G<sup>6</sup></b> Bravais Lattice Determination
 |
 </center>
 <hr />
-<p>
 <center>
-<H2> <b>G<sup>6</sup></b> 
-Bravais General Analysis of Lattices (BGAOL)</H2>
-<P> by
-<P> Lawrence C. Andrews, Micro Encoder Inc.,
-<BR>Herbert J. Bernstein, Bernstein+Sons,
+<H2> <b>G<sup>6</sup></b> Bravais General Analysis of Lattices (BGAOL)</H2>
+<br /> by
+<br /> Lawrence C. Andrews, Micro Encoder Inc.,
+<br />Herbert J. Bernstein, Bernstein+Sons,
 <A HREF=mailto:yaya@bernstein-plus-sons.com>yaya@bernstein-plus-sons.com</A>
 <FORM method=POST ACTION="'CGIBIN()`/bgaol.csh">
-<BR>
-<p>
+<br />
 A program to determine cells &quot;close&quot; to given cell to help find the Bravais 
 lattice of highest symmetry consistent with the submitted cell.
-<P>
+<br />
 <STRONG>
 Please read the <a href="#notice">NOTICE</a> below before use of this web page
 </STRONG>
-<P>
+<p>
 <a name="search"></a>
 <INPUT type="submit">
 <INPUT type="reset">
-<BR>
+<br />
 <input type=hidden name="OutputStyle" value="TEXT" />
 <table border=2>
 <tr><td valign=top>
@@ -201,13 +199,16 @@ Specify the cell edge length esd''`s and angle esd''`s:
 </td>
 </tr>
 </table>
-<hr>
 <INPUT type="hidden" NAME="Flush" VALUE="DUMMY">
 <INPUT type="submit">
 <INPUT type="reset">
 </Form> <hr>
 </center>
-<a name="notice"><H2>NOTICE</H2></a>
+<a name="notice"><H2 align="center">NOTICE</H2></a>
+<center>
+<table border=0>
+<tr><td width=200>
+<font size="2">
 <P>
 You may redistribute this program under the terms of the <a href="gpl.txt">GPL</a>.
 <p>
@@ -215,11 +216,15 @@ Alternatively you may redistribute the functions
 and subroutines of this program as an API under the
 terms of the <a href="lgpl.txt">LGPL</a>.
 <p>
+</td>
+<td>
+<div style="width:800px;height:150px;overflow:scroll;border:2px solid #0000FF;">
+<font size="2">
 <table border=2>
 <tr>
 <th align="center">GPL NOTICES</th>
 <th align="center">LGPL NOTICES</th></tr>
-<tr><td>
+<tr><td><font size="2">
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; either version 2 of
@@ -233,9 +238,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-02111-1307  USA
+02111-1307  USA</font>
 </td>
-<td>
+<td><font size="2">
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
 License as published by the Free Software Foundation; either
@@ -249,7 +254,7 @@ Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public
 License along with this library; if not, write to the Free
 Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
-MA  02110-1301  USA
+MA  02110-1301  USA</font>
 </td>
 </tr>
 </table>
@@ -282,8 +287,15 @@ CREATED BY USE OF THE PROGRAMS OR DOCUMENTS LIES SOLELY WITH THE USERS OF THE PR
 FILE OR FILES AND NOT WITH AUTHORS OF THE PROGRAMS OR DOCUMENTS.
 
 </STRONG>
+</font>
+</div>
+</td>
+</tr>
+</table>
+</center>
 <P>
 <hr>
+</font>
 <a name="source"></a>
 <H2>Access to the source of BGAOL</H2>
 
@@ -296,7 +308,8 @@ or a
 <a name="background"></a>
 <h2>Background</h2> <p>
 
-BGAOL is an updated version of the program ITERATE that finds cells that are &quot;close&quot; to the cell given, in 
+BGAOL is an updated version of the program ITERATE that finds cells that are &quot;close&quot; to the 
+cell given, in 
 order to help find the Bravais lattice of highest symmetry consistent with the submitted cell. A central 
 problem in the solution of every crystal structure is to determine the correct Bravais lattice of the 
 crystal. Many methods have been described for finding the correct Bravais lattice.  ITERATE is based on 
@@ -563,7 +576,8 @@ determination of a unique conventional cell. Zeitschrift fu r Kristallographie, 
 </center>
 
 <hr>
-Updated 18 July 2012.
+Updated 21 July 2012.
+</font>
 </body>
 </html>
 '
