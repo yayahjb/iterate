@@ -144,7 +144,7 @@ install:	edit_done bgaol bgaol.csh bgaol.html \
 		cp -r $(MATHSCRIBEPATH) $(HTDOCS)/$(MATHSCRIBEPATH)
 
 #		
-bgaol.o:	bgaol.f MKGAOL.FOR MKREFL.FOR E3TOG6.FOR near6.for 
+bgaol.o:	bgaol.f MKGAOL.FOR MKREFL.FOR E3TOG6.FOR near6.for NEAR.cmn
 bgaol:		bgaol.o 
 		$(FC) $(FFLAGS) -o bgaol bgaol.o
 	
