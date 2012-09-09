@@ -148,6 +148,7 @@ C
       include "near6.for"
       include "E3TOG6.FOR"
       include "MKGAOL.FOR"
+      include "NEAR.cmn"
 
 C**********************************************************************C
       PROGRAM RED
@@ -218,6 +219,10 @@ C**********************************************************************C
       CHARACTER *100 TITLE
 
       LOGICAL NEARRED
+
+      common/xdebug/xdebug
+      logical xdebug
+      data xdebug/.false./
 
       DATA bnames/ '1','2','3','4','5','6','7','8','9',
      *  'A','B','C','D','E','F',
@@ -2551,7 +2556,7 @@ C
       real*8 DELTA, DIST, XDELTA
       integer ii
       real*8 S456
-      real*8 NCDIST
+      real*8 g456dist
 C----------------------------------------------------------------------C
 
       IF (TEST .NE. 'NEAR2RED') THEN
@@ -2653,7 +2658,7 @@ C
      *  2.D0*(GVEC(1)+GVEC(5))+GVEC(6).GT.0D0) 
      *  near2red=.false.
 
-1000  DIST = NCDIST(GVEC,VOUT)
+1000  DIST = g456dist(GVEC,VOUT)
 
       if (DIST.GT.DELTA) near2red = .false.
 C      write(*,*)"NEAR2RED",delta,near2red,dist
